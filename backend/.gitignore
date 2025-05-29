@@ -1,0 +1,17 @@
+# Thư mục node_modules
+node_modules/
+
+# File môi trường
+.env
+
+# Thư mục log
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
