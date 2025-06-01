@@ -149,7 +149,7 @@ const SignUpScreen = () => {
         <ScrollView contentContainerStyle={styles.container}>
           <View style={styles.main}>
             <Image
-              source={require('../../assets/Ice-skating.png')}
+              source={require('../../assets/img/Ice-skating.png')}
               style={{height: 45, width: 45}}
             />
             <TextComponent label="FaceTrack" styles={styles.title} title />

@@ -1,3 +1,4 @@
+import {PermissionsAndroid, Platform} from 'react-native';
 import Toast from 'react-native-toast-message';
 
 const activity = (
@@ -13,4 +14,18 @@ const activity = (
     visibilityTime: 3000,
   });
 };
-export const showNotificating = {activity};
+const requestLocationPermission = async () => {
+  if (Platform.OS === 'android') {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      {
+        title: 'Yêu cầu quyền truy cập vị trí',
+        message: 'Ứng dụng cần truy cập vị trí của bạn',
+        buttonPositive: 'OK',
+      },
+    );
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  }
+  return true;
+};
+export const showNotificating = {activity, requestLocationPermission};

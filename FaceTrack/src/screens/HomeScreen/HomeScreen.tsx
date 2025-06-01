@@ -1,15 +1,15 @@
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
-  SafeAreaView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 
+import Geolocation from '@react-native-community/geolocation';
+import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import SearchComponent from '../../components/Input/SearchComponent';
 import {
@@ -21,22 +21,113 @@ import {
 import AnimatedCameraIcon from '../../components/layout/AnimatedCameraIcon';
 import CardComponent from '../../components/layout/CardComponent';
 import appColors from '../../constants/appColors';
-import {appSize} from '../../constants/appSize';
+import { appSize } from '../../constants/appSize';
 import DropdownMenu from '../../modal/DropdownMenu';
-import {authSelector} from '../../redux/slices/authSlice';
-import {menu} from '../data/data';
+import { authSelector } from '../../redux/slices/authSlice';
+import { showNotificating } from '../../utils/ShowNotification';
+import { menu } from '../data/data';
 import PlanBannerModal from '../modals/PlanBannerModal';
-
+type Place = {
+  title: string;
+  distance: number;
+  address: any;
+  position: {
+    lat: number;
+    lng: number;
+  };
+};
 const HomeScreen = ({navigation}: any) => {
   const [isVisible, setVisible] = useState(false);
+  const [currentAddress, setCurrentAddress] = useState<Place>({
+    address: '',
+    distance: 0,
+    position: {lat: 0, lng: 0},
+    title: '',
+  });
   const user = useSelector(authSelector);
   const [isBanner, setIsBanner] = useState(user.role === 'leader');
+  const hasPermissionLocal = !showNotificating.requestLocationPermission();
+  const firstRow = menu.slice(0, Math.ceil(menu.length / 2));
+  const secondRow = menu.slice(Math.ceil(menu.length / 2));
+  const onCloseModal = () => {
+    setVisible(false);
+  };
+  const onChangeMenuModal = () => {
+    setVisible(prev => !prev);
+  };
+  const getAddressFromCoords = async (latitude: number, longitude: number) => {
+    const apiKey = 'mx2P_8qXMY5s0nPMlfpR6Z23cDhwU5lWHvIm2rNbfls';
+    const url = `https://browse.search.hereapi.com/v1/browse?at=${latitude},${longitude}&limit=5&lang=vi-VI&apikey=${apiKey}
+`;
+    try {
+      const res = await axios(url);
+      if (res && res.data && res.status === 200) {
+        console.log(res.data.items, latitude, longitude);
+
+        const nearestPlace: Place = res.data.items.reduce(
+          (prev: any, current: any) => {
+            return prev.distance < current.distance ? prev : current;
+          },
+        );
+        return {
+          title: nearestPlace.title,
+          address: nearestPlace.address,
+          position: nearestPlace.position,
+          distance: nearestPlace.distance,
+        };
+      }
+    } catch (error) {
+      console.error('Lỗi reverse geocoding:', error);
+      return null;
+    }
+  };
+  const getCurrentLocation = async () => {
+    const hasPermissionLocal =
+      await showNotificating.requestLocationPermission();
+    if (!hasPermissionLocal) {
+      console.log('Quyền truy cập vị trí bị từ chối');
+      return;
+    }
+    Geolocation.getCurrentPosition(
+      async position => {
+        const {longitude, latitude} = position.coords;
+        const address: Place =
+          (await getAddressFromCoords(latitude, longitude)) ?? currentAddress;
+        console.log('Vị trí hiện tại: ', address);
+        setCurrentAddress(address);
+      },
+      error => {
+        console.log('Lỗi khi lấy vị trí: ', error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 10000,
+      },
+    );
+  };
+  const onNavigation = async () => {
+    if (hasPermissionLocal) {
+      console.log('Chưa được cấp quyền vị trí');
+      await showNotificating.requestLocationPermission();
+    }
+    navigation.navigate('face');
+  };
+
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+  useEffect(() => {
+    if (hasPermissionLocal) {
+      showNotificating.requestLocationPermission();
+    }
+  }, [currentAddress]);
   const HeaderHome = () => {
     return (
       <RowComponent styles={{marginVertical: 12, paddingHorizontal: 12}}>
         <RowComponent styles={{flex: 1, gap: 12}}>
           <TouchableOpacity
-            onPress={() => setVisible(!isVisible)}
+            onPress={onChangeMenuModal}
             style={{justifyContent: 'center'}}>
             <Image
               source={require('../../assets/img/foto_Perfil.png')}
@@ -57,7 +148,7 @@ const HomeScreen = ({navigation}: any) => {
         </RowComponent>
         <View
           style={{
-            backgroundColor: appColors.white,
+            backgroundColor: appColors.white+'46',
             justifyContent: 'center',
             alignItems: 'center',
             borderRadius: 8,
@@ -87,11 +178,6 @@ const HomeScreen = ({navigation}: any) => {
       </RowComponent>
     );
   };
-  const onCloseModal = () => {
-    setVisible(false);
-  };
-  const firstRow = menu.slice(0, Math.ceil(menu.length / 2));
-  const secondRow = menu.slice(Math.ceil(menu.length / 2));
 
   const scannedHistory = [
     {
@@ -145,13 +231,21 @@ const HomeScreen = ({navigation}: any) => {
               <Ionicons
                 name="location-outline"
                 size={16}
-                color={appColors.gray}
+                color={appColors.success}
               />
-              <TextComponent label={'Văn phòng'} styles={styles.infoText} />
+              <TextComponent
+                label={
+                  currentAddress.title.length > 33
+                    ? `${currentAddress.title.slice(0, 33)}...`
+                    : currentAddress.title
+                }
+                styles={styles.infoText}
+                numberLine={4}
+              />
             </View>
           </View>
           {/* thiết kế biểu tượng  */}
-          <AnimatedCameraIcon navigation={navigation} />
+          <AnimatedCameraIcon onNavigation={onNavigation} />
         </View>
         <View style={{marginVertical: 18}}>
           <RowComponent styles={{paddingHorizontal: 12}}>
@@ -221,7 +315,6 @@ const HomeScreen = ({navigation}: any) => {
                 borderWidth: 1,
                 borderColor: '#e0f2f1',
               }}>
-            
               <View style={{flexDirection: 'row', alignItems: 'center'}}>
                 <TouchableOpacity
                   onPress={() => console.log('Xem chi tiết')}

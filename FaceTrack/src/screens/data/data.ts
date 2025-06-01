@@ -1,12 +1,13 @@
-import {Udraw, Staff, History, Statistics, Secure} from '../../assets/svg/index';
+import {Udraw, Staff, History, Statistics, Secure} from '../../assets/svg';
 
 export const menu = [
   {
     id: 1,
-    title: 'Danh sách',
-    description: 'Quản lý',
-    Icon: Staff, // <-- chỉ tham chiếu, không render
+    title: 'Đợi',
+    description: 'Kiểm duyệt',
+    Icon: Secure, // hoặc undefined
   },
+
   {
     id: 2,
     title: 'Lịch sử',
@@ -21,8 +22,8 @@ export const menu = [
   },
   {
     id: 4,
-    title: 'Nhập mã',
-    description: 'Giới thiệu',
-    Icon: Secure, // hoặc undefined
+    title: 'Danh sách',
+    description: 'Quản lý',
+    Icon: Staff, // <-- chỉ tham chiếu, không render
   },
 ];

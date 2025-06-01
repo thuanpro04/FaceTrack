@@ -10,9 +10,17 @@ import React, {use, useEffect, useRef} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import appColors from '../../constants/appColors';
 import TextComponent from './TextComponent';
-
-const AnimatedCameraIcon = ({navigation}: any) => {
+import {useCameraPermission} from 'react-native-vision-camera';
+interface Props {
+  onNavigation: () => void;
+}
+const AnimatedCameraIcon = (props: Props) => {
+  const {onNavigation} = props;
+  const {hasPermission, requestPermission} = useCameraPermission();
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const colorPermission = hasPermission
+    ? appColors.success
+    : appColors.buttonDanger;
   useEffect(() => {
     const pulseAnimation = Animated.loop(
       Animated.sequence([
@@ -37,7 +45,7 @@ const AnimatedCameraIcon = ({navigation}: any) => {
 
   return (
     <TouchableOpacity
-      onPress={() => navigation.navigate('camera')}
+      onPress={onNavigation}
       activeOpacity={0.8}
       style={styles.cameraIconContainer}>
       <Animated.View style={[styles.cameraOuterRing]}>
@@ -80,10 +88,14 @@ const AnimatedCameraIcon = ({navigation}: any) => {
                 inputRange: [1, 1.1],
                 outputRange: [1, 0.6],
               }),
+              backgroundColor: colorPermission,
             },
           ]}
         />
-        <TextComponent styles={styles.statusText} label="Sẵn sàng" />
+        <TextComponent
+          styles={[styles.statusText, {color: colorPermission}]}
+          label={hasPermission ? 'Sẵn sàng' : 'Chưa sẵn sàng'}
+        />
       </View>
     </TouchableOpacity>
   );
@@ -188,12 +200,10 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: appColors.success,
   },
 
   statusText: {
     fontSize: 11,
-    color: appColors.success,
     fontWeight: '600',
   },
 });

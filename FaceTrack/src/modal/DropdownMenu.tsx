@@ -18,6 +18,7 @@ import appColors from '../constants/appColors';
 import {useDispatch} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {removeAuth} from '../redux/slices/authSlice';
+import Feather from 'react-native-vector-icons/Feather';
 interface Props {
   visible: boolean;
   onClose: () => void;
@@ -33,6 +34,9 @@ const DropdownMenu = (props: Props) => {
       case 'edit':
         console.log('Edit profile');
         onClose();
+        break;
+      case 'code':
+
         break;
       case 'logout':
         handleLogout();
@@ -63,6 +67,17 @@ const DropdownMenu = (props: Props) => {
                   color={appColors.iconSecondary}
                 />
                 <TextComponent label="Editar" size={16} />
+              </RowComponent>
+              <SpaceComponent height={5} />
+              <RowComponent
+                styles={styles.itemMenu}
+                onPress={() => handleItem('code')}>
+                <Feather
+                  name="codepen"
+                  size={appSize.iconMedium}
+                  color={appColors.iconSecondary}
+                />
+                <TextComponent label="Code" size={16} />
               </RowComponent>
               <SpaceComponent height={5} />
               <RowComponent

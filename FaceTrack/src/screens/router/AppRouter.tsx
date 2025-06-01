@@ -1,12 +1,13 @@
 import {useAsyncStorage} from '@react-native-async-storage/async-storage';
 import React, {useEffect, useState} from 'react';
-import {StyleSheet} from 'react-native';
+import {PermissionsAndroid, Platform, StyleSheet} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {addAuth, authSelector} from '../../redux/slices/authSlice';
 import AuthNavigator from '../navigations/AuthNavigator';
 import MainNavigator from '../navigations/MainNavigator';
 import SplashScreen from '../SplashScreen';
 import {useCameraPermission} from 'react-native-vision-camera';
+import {showNotificating} from '../../utils/ShowNotification';
 const AppRouter = () => {
   const {getItem, setItem} = useAsyncStorage('user');
   const [isShowSplash, setIsShowSplash] = useState(true);
@@ -32,6 +33,7 @@ const AppRouter = () => {
       requestPermission();
     }
   }, [hasPermission]);
+ 
   return (
     <>
       {isShowSplash ? (

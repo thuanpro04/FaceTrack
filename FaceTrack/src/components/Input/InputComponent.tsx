@@ -39,7 +39,9 @@ const InputComponent = (props: Props) => {
           placeholderTextColor={appColors.textGrey}
           style={styles.input}
           secureTextEntry={isShowPass}
+          
         />
+
         {isPass ? (
           <TouchableOpacity
             style={styles.iconRight}
