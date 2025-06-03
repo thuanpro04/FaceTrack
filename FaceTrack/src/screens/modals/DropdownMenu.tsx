@@ -11,14 +11,15 @@ import {
   RowComponent,
   SpaceComponent,
   TextComponent,
-} from '../components/layout';
+} from '../../components/layout';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {appSize} from '../constants/appSize';
-import appColors from '../constants/appColors';
+import {appSize} from '../../constants/appSize';
+import appColors from '../../constants/appColors';
 import {useDispatch} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {removeAuth} from '../redux/slices/authSlice';
+import {removeAuth} from '../../redux/slices/authSlice';
 import Feather from 'react-native-vector-icons/Feather';
+import InputCodeModal from './InputCodeModal';
 interface Props {
   visible: boolean;
   onClose: () => void;
@@ -27,16 +28,18 @@ interface Props {
 const DropdownMenu = (props: Props) => {
   const {visible, onClose, navigation} = props;
   const [isVisible, setIsVisible] = useState(false);
+  const [isCodeModal, setIsCodeModal] = useState(false);
   const dispatch = useDispatch();
 
   const handleItem = (key: string) => {
+    
     switch (key) {
       case 'edit':
-        console.log('Edit profile');
+        navigation.navigate('edit');
         onClose();
         break;
       case 'code':
-
+        setIsCodeModal(true);
         break;
       case 'logout':
         handleLogout();
@@ -52,7 +55,11 @@ const DropdownMenu = (props: Props) => {
   useEffect(() => {
     setIsVisible(visible);
   }, [visible]);
-  return (
+  const onCloseCodeModal = () => {
+    setIsCodeModal(false);
+    onClose();
+  };
+  return !isCodeModal ? (
     <Modal visible={isVisible} transparent onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
@@ -95,6 +102,12 @@ const DropdownMenu = (props: Props) => {
         </View>
       </TouchableWithoutFeedback>
     </Modal>
+  ) : (
+    <InputCodeModal
+      onSubmit={() => console.log('Code submitted')}
+      onClose={onCloseCodeModal}
+      visible={isCodeModal}
+    />
   );
 };
 

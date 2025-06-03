@@ -1,12 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
-} from 'react-native';
-import { useSelector } from 'react-redux';
+import React, {useEffect, useState} from 'react';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {useSelector} from 'react-redux';
 
 import Geolocation from '@react-native-community/geolocation';
 import axios from 'axios';
@@ -21,12 +15,13 @@ import {
 import AnimatedCameraIcon from '../../components/layout/AnimatedCameraIcon';
 import CardComponent from '../../components/layout/CardComponent';
 import appColors from '../../constants/appColors';
-import { appSize } from '../../constants/appSize';
-import DropdownMenu from '../../modal/DropdownMenu';
-import { authSelector } from '../../redux/slices/authSlice';
-import { showNotificating } from '../../utils/ShowNotification';
-import { menu } from '../data/data';
+import {appSize} from '../../constants/appSize';
+import DropdownMenu from '../modals/DropdownMenu';
+import {authSelector} from '../../redux/slices/authSlice';
+import {showNotificating} from '../../utils/ShowNotification';
+import {menu} from '../data/data';
 import PlanBannerModal from '../modals/PlanBannerModal';
+import LoadingModal from '../modals/LoadingModal';
 type Place = {
   title: string;
   distance: number;
@@ -44,9 +39,10 @@ const HomeScreen = ({navigation}: any) => {
     position: {lat: 0, lng: 0},
     title: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasPermissionLocal, setHasPermissionLocal] = useState<boolean>(false);
   const user = useSelector(authSelector);
   const [isBanner, setIsBanner] = useState(user.role === 'leader');
-  const hasPermissionLocal = !showNotificating.requestLocationPermission();
   const firstRow = menu.slice(0, Math.ceil(menu.length / 2));
   const secondRow = menu.slice(Math.ceil(menu.length / 2));
   const onCloseModal = () => {
@@ -113,15 +109,18 @@ const HomeScreen = ({navigation}: any) => {
     }
     navigation.navigate('face');
   };
+  useEffect(() => {
+    const init = async () => {
+      const granted = await showNotificating.requestLocationPermission();
+      if (granted) {
+        setHasPermissionLocal(true);
+        await getCurrentLocation();
+      }
+    };
 
-  useEffect(() => {
-    getCurrentLocation();
+    init();
   }, []);
-  useEffect(() => {
-    if (hasPermissionLocal) {
-      showNotificating.requestLocationPermission();
-    }
-  }, [currentAddress]);
+
   const HeaderHome = () => {
     return (
       <RowComponent styles={{marginVertical: 12, paddingHorizontal: 12}}>
@@ -148,7 +147,7 @@ const HomeScreen = ({navigation}: any) => {
         </RowComponent>
         <View
           style={{
-            backgroundColor: appColors.white+'46',
+            backgroundColor: appColors.white + '46',
             justifyContent: 'center',
             alignItems: 'center',
             borderRadius: 8,
@@ -364,6 +363,7 @@ const HomeScreen = ({navigation}: any) => {
           onUpgrade={() => navigation.navigate('payment')}
         />
       </ContainerComponent>
+      <LoadingModal isVisible={isLoading} />
     </ContainerComponent>
   );
 };
