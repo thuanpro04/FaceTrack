@@ -14,6 +14,8 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+// upload các file tĩnh
+app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/auth", authRouter);
 connectDb();
 app.listen(port, () => {

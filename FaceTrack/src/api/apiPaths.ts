@@ -7,9 +7,8 @@ export const API_PATHS = {
     UPLOAD_PROFILE: '/api/v1/auth/update',
     VERIFI:'/api/v1/auth/verify',
     RESET:'/api/v1/auth/reset'
-
   },
   IMAGE: {
-    UPLOAD_IMAGE: '',
+    UPLOAD_IMAGE: '/api/v1/auth/upload-image',
   },
 };

@@ -1,41 +1,59 @@
+import React, {useState} from 'react';
 import {
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
-  View,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  Dimensions,
-  StatusBar,
+  View,
 } from 'react-native';
-import React, {useState} from 'react';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import {
-  ButtonComponent,
-  ContainerComponent,
-  RowComponent,
-  TextComponent,
-} from '../../components/layout';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import {ContainerComponent, TextComponent} from '../../components/layout';
 import appColors from '../../constants/appColors';
 import {appSize} from '../../constants/appSize';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import ButtonImagePicker from '../../components/layout/ButtonImagePicker';
+import {useSelector} from 'react-redux';
+import {authSelector} from '../../redux/slices/authSlice';
+import {ImageOrVideo} from 'react-native-image-crop-picker';
+import {API_PATHS} from '../../api/apiPaths';
+import axiosInstance from '../../api/axiosInstance';
 const {width} = Dimensions.get('window');
-
+interface info {
+  profileImageUrl?: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  gender: 'nam' | 'nữ' | 'khác';
+  dob: Date | null;
+}
 const EditProfileScreen = ({navigation}: any) => {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [gender, setGender] = useState('');
   const [focusedInput, setFocusedInput] = useState('');
-  const [dob, setDob] = useState<any>(null);
+  const [user, setUser] = useState<info>({
+    fullName: '',
+    email: '',
+    phone: '',
+    address: '',
+    dob: null,
+    gender: 'nam',
+    profileImageUrl: '',
+  });
+  const profile = useSelector(authSelector);
+
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const onChangeUserInfo = (key: string, value: string) => {
+    setUser(prev => ({...prev, [key]: value}));
+  };
   const handleSaveProfile = () => {
     // Xử lý lưu thông tin profile
-    console.log('Saving profile...');
+    console.log('Saving profile...', user);
   };
   const showDatePicker = () => {
     setDatePickerVisibility(true);
@@ -49,7 +67,7 @@ const EditProfileScreen = ({navigation}: any) => {
 
   const handleDateConfirm = (selectedDate: any) => {
     console.log('Selected date: ', selectedDate);
-    setDob(selectedDate);
+    onChangeUserInfo('dob', selectedDate);
     hideDatePicker();
   };
 
@@ -57,273 +75,334 @@ const EditProfileScreen = ({navigation}: any) => {
     console.log('Date picker cancelled');
     hideDatePicker();
   };
+  const handleImageUrl = async (value: ImageOrVideo) => {
+    console.log(value, 122);
+    const formData = new FormData();
+    formData.append('image', {
+      uri: value.path,
+      type: value.mime,
+      name: value.filename || 'photo.jpg',
+    });
+    try {
+      const response = await axiosInstance.post(
+        API_PATHS.IMAGE.UPLOAD_IMAGE,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+      if (response?.data) {
+        console.log('Res: ', response?.data);
+        onChangeUserInfo('profileImageUrl', response.data.profileImageUrl);
+      }
+    } catch (error) {
+      console.log('error: ', error);
+    }
+  };
+  const facePhotos = [
+    'front_face.jpg', // Ảnh nhìn thẳng (bắt buộc)
+    'slight_left.jpg', // Nghiêng trái 15°
+    'slight_right.jpg', // Nghiêng phải 15°
+    'with_smile.jpg', // Có nụ cười
+    'serious_face.jpg', // Biểu cảm nghiêm túc
+  ];
+
   return (
-    <ContainerComponent isScroll>
-      {/* Header Gradient */}
-      <LinearGradient
-        colors={['#2C698D', '#00C897']}
-        start={{x: 0, y: 0}}
-        end={{x: 1, y: 1}}
-        style={styles.headerGradient}>
-        <AntDesign
-          name="arrowleft"
-          color={appColors.white}
-          size={appSize.iconMedium}
-          onPress={() => navigation.goBack()}
-        />
-        <TextComponent label="Chỉnh sửa hồ sơ" styles={styles.headerTitle} />
-        <TextComponent
-          label="Cập nhật thông tin cá nhân của bạn"
-          styles={styles.headerSubtitle}
-        />
-      </LinearGradient>
-
-      <ContainerComponent>
-        {/* Avatar Section */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarContainer}>
-            <LinearGradient
-              colors={['#00C897', '#2C698D']}
-              style={styles.avatarGradient}>
-              <Icon name="person" size={50} color="#fff" />
-            </LinearGradient>
-            <TouchableOpacity style={styles.cameraButton}>
-              <Icon name="camera-alt" size={16} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            style={styles.faceSetupButton}
-            onPress={() => navigation.navigate('face')}>
-            <LinearGradient
-              colors={['#00C897', '#2C698D']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-              style={styles.faceSetupGradient}>
-              <MaterialCommunityIcons
-                name="face-recognition"
-                size={18}
-                color="#fff"
-              />
-              <TextComponent
-                label="Thiết lập Face ID"
-                styles={styles.faceSetupButtonText}
-              />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {/* Form Container */}
-        <View style={styles.formContainer}>
-          <TextComponent
-            label="Thông tin cá nhân"
-            styles={styles.sectionTitle}
+    <KeyboardAvoidingView
+      style={{flex: 1}}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ContainerComponent isScroll>
+        {/* Header Gradient */}
+        <LinearGradient
+          colors={['#2C698D', '#00C897']}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 1}}
+          style={styles.headerGradient}>
+          <AntDesign
+            name="arrowleft"
+            color={appColors.white}
+            size={appSize.iconMedium}
+            onPress={() => navigation.goBack()}
           />
+          <TextComponent label="Chỉnh sửa hồ sơ" styles={styles.headerTitle} />
+          <TextComponent
+            label="Cập nhật thông tin cá nhân của bạn"
+            styles={styles.headerSubtitle}
+          />
+        </LinearGradient>
 
-          {/* Full Name Input */}
-          <View style={styles.inputContainer}>
-            <View
-              style={[
-                styles.inputWrapper,
-                focusedInput === 'fullName' && styles.inputWrapperFocused,
-              ]}>
-              <Icon
-                name="person"
-                size={20}
-                color={focusedInput === 'fullName' ? '#667eea' : '#9ca3af'}
-              />
-              <TextInput
-                style={styles.input}
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Họ và tên"
-                placeholderTextColor="#9ca3af"
-                onFocus={() => setFocusedInput('fullName')}
-                onBlur={() => setFocusedInput('')}
-              />
-            </View>
-          </View>
-
-          {/* Email Input */}
-          <View style={styles.inputContainer}>
-            <View
-              style={[
-                styles.inputWrapper,
-                focusedInput === 'email' && styles.inputWrapperFocused,
-              ]}>
-              <Icon
-                name="email"
-                size={20}
-                color={focusedInput === 'email' ? '#667eea' : '#9ca3af'}
-              />
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Email"
-                placeholderTextColor="#9ca3af"
-                keyboardType="email-address"
-                onFocus={() => setFocusedInput('email')}
-                onBlur={() => setFocusedInput('')}
-              />
-            </View>
-          </View>
-
-          {/* Phone Input */}
-          <View style={styles.inputContainer}>
-            <View
-              style={[
-                styles.inputWrapper,
-                focusedInput === 'phone' && styles.inputWrapperFocused,
-              ]}>
-              <Icon
-                name="phone"
-                size={20}
-                color={focusedInput === 'phone' ? '#667eea' : '#9ca3af'}
-              />
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="Số điện thoại"
-                placeholderTextColor="#9ca3af"
-                keyboardType="phone-pad"
-                onFocus={() => setFocusedInput('phone')}
-                onBlur={() => setFocusedInput('')}
-              />
-            </View>
-          </View>
-          {/* Address Input */}
-          <View style={styles.inputContainer}>
-            <View
-              style={[
-                styles.inputWrapper,
-                focusedInput === 'address' && styles.inputWrapperFocused,
-              ]}>
-              <Icon
-                name="location-on"
-                size={20}
-                color={focusedInput === 'address' ? '#667eea' : '#9ca3af'}
-              />
-              <TextInput
-                style={styles.input}
-                value={address}
-                onChangeText={setAddress}
-                placeholder="Địa chỉ"
-                placeholderTextColor="#9ca3af"
-                onFocus={() => setFocusedInput('address')}
-                onBlur={() => setFocusedInput('')}
-              />
-            </View>
-          </View>
-          <View style={styles.inputContainer}>
-            <TouchableOpacity
-              style={[
-                styles.inputWrapper,
-                focusedInput === 'dob' && styles.inputWrapperFocused,
-                {
-                  width: '80%',
-                },
-              ]}
-              activeOpacity={0.7}
-              onPress={showDatePicker}
-              onFocus={() => setFocusedInput('dob')}>
-              <Icon
-                name="cake"
-                size={20}
-                color={
-                  focusedInput === 'dob' || isDatePickerVisible
-                    ? '#667eea'
-                    : '#9ca3af'
+        <ContainerComponent>
+          {/* Avatar Section */}
+          <View style={styles.avatarSection}>
+            <View style={styles.avatarContainer}>
+              {user.profileImageUrl ? (
+                <Image
+                  source={{
+                    uri: user.profileImageUrl ?? profile.profileImageUrl,
+                  }}
+                  style={styles.avatarGradient}
+                />
+              ) : (
+                <View style={styles.avatarGradient}>
+                  <TextComponent label={profile.fullName.slice(0, 1)[0]} />
+                </View>
+              )}
+              <ButtonImagePicker
+                onSelect={val =>
+                  val.type === 'url'
+                    ? onChangeUserInfo('profileImageUrl', val.value.toString())
+                    : handleImageUrl(val.value as ImageOrVideo)
                 }
               />
-              <Text
-                style={[styles.input, {color: dob ? '#1f2937' : '#9ca3af'}]}>
-                {dob
-                  ? `${dob.getDate().toString().padStart(2, '0')}/${(
-                      dob.getMonth() + 1
-                    )
-                      .toString()
-                      .padStart(2, '0')}/${dob.getFullYear()}`
-                  : 'Chọn ngày sinh'}
-              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.faceSetupButton}
+              onPress={() => navigation.navigate('face')}>
+              <LinearGradient
+                colors={['#00C897', '#2C698D']}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+                style={styles.faceSetupGradient}>
+                <MaterialCommunityIcons
+                  name="face-recognition"
+                  size={18}
+                  color="#fff"
+                />
+                <TextComponent
+                  label="Thiết lập Face ID"
+                  styles={styles.faceSetupButtonText}
+                />
+              </LinearGradient>
             </TouchableOpacity>
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
-              mode="date"
-              date={dob || new Date(2000, 0, 1)}
-              maximumDate={new Date()}
-              minimumDate={new Date(1950, 0, 1)}
-              onConfirm={handleDateConfirm}
-              onCancel={handleDateCancel}
-              confirmTextIOS="Xác nhận"
-              cancelTextIOS="Hủy"
-              locale="vi_VN"
-              display="default"
-              modalStyleIOS={{
-                backgroundColor: 'rgba(0,0,0,0.5)',
-              }}
-              pickerContainerStyleIOS={{
-                backgroundColor: 'white',
-                borderRadius: 20,
-                margin: 20,
-                padding: 20,
-              }}
-            />
           </View>
-          {/* Gender Selection */}
-          <View style={styles.genderSection}>
-            <TextComponent label="Giới tính" styles={styles.genderLabel} />
-            <View style={styles.genderContainer}>
-              {['Nam', 'Nữ', 'Khác'].map(option => (
-                <TouchableOpacity
-                  key={option}
-                  style={[
-                    styles.genderOption,
-                    gender === option && styles.genderOptionSelected,
+
+          {/* Form Container */}
+          <View style={styles.formContainer}>
+            <TextComponent
+              label="Thông tin cá nhân"
+              styles={styles.sectionTitle}
+            />
+
+            {/* Full Name Input */}
+            <View style={styles.inputContainer}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  focusedInput === 'fullName' && styles.inputWrapperFocused,
+                ]}>
+                <Icon
+                  name="person"
+                  size={20}
+                  color={focusedInput === 'fullName' ? '#667eea' : '#9ca3af'}
+                />
+                <TextInput
+                  style={styles.input}
+                  value={user.fullName}
+                  onChangeText={text => onChangeUserInfo('fullName', text)}
+                  placeholder="Họ và tên"
+                  placeholderTextColor="#9ca3af"
+                  onFocus={() => setFocusedInput('fullName')}
+                  onBlur={() => setFocusedInput('')}
+                />
+              </View>
+            </View>
+
+            {/* Email Input */}
+            <View style={styles.inputContainer}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  focusedInput === 'email' && styles.inputWrapperFocused,
+                ]}>
+                <Icon
+                  name="email"
+                  size={20}
+                  color={focusedInput === 'email' ? '#667eea' : '#9ca3af'}
+                />
+                <TextInput
+                  style={styles.input}
+                  value={user.email}
+                  onChangeText={text => onChangeUserInfo('email', text)}
+                  placeholder="Email"
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="email-address"
+                  onFocus={() => setFocusedInput('email')}
+                  onBlur={() => setFocusedInput('')}
+                />
+              </View>
+            </View>
+
+            {/* Phone Input */}
+            <View style={styles.inputContainer}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  focusedInput === 'phone' && styles.inputWrapperFocused,
+                ]}>
+                <Icon
+                  name="phone"
+                  size={20}
+                  color={focusedInput === 'phone' ? '#667eea' : '#9ca3af'}
+                />
+                <TextInput
+                  style={styles.input}
+                  value={user.phone}
+                  onChangeText={text => onChangeUserInfo('phone', text)}
+                  placeholder="Số điện thoại"
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="phone-pad"
+                  onFocus={() => setFocusedInput('phone')}
+                  onBlur={() => setFocusedInput('')}
+                />
+              </View>
+            </View>
+            {/* Address Input */}
+            <View style={styles.inputContainer}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  focusedInput === 'address' && styles.inputWrapperFocused,
+                ]}>
+                <Icon
+                  name="location-on"
+                  size={20}
+                  color={focusedInput === 'address' ? '#667eea' : '#9ca3af'}
+                />
+                <TextInput
+                  style={styles.input}
+                  value={user.address}
+                  onChangeText={text => onChangeUserInfo('address', text)}
+                  placeholder="Địa chỉ"
+                  placeholderTextColor="#9ca3af"
+                  onFocus={() => setFocusedInput('address')}
+                  onBlur={() => setFocusedInput('')}
+                />
+              </View>
+            </View>
+            <View style={styles.inputContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.inputWrapper,
+                  focusedInput === 'dob' && styles.inputWrapperFocused,
+                  {
+                    width: '80%',
+                  },
+                ]}
+                activeOpacity={0.7}
+                onPress={showDatePicker}
+                onFocus={() => setFocusedInput('dob')}>
+                <Icon
+                  name="cake"
+                  size={20}
+                  color={
+                    focusedInput === 'dob' || isDatePickerVisible
+                      ? '#667eea'
+                      : '#9ca3af'
+                  }
+                />
+                <TextComponent
+                  label={
+                    user.dob
+                      ? `${user.dob.getDate().toString().padStart(2, '0')}/${(
+                          user.dob.getMonth() + 1
+                        )
+                          .toString()
+                          .padStart(2, '0')}/${user.dob.getFullYear()}`
+                      : 'Chọn ngày sinh'
+                  }
+                  styles={[
+                    styles.input,
+                    {color: user.dob ? '#1f2937' : '#9ca3af'},
                   ]}
-                  onPress={() => setGender(option)}
-                  activeOpacity={0.7}>
-                  {gender === option ? (
-                    <LinearGradient
-                      colors={['#2C698D', '#00C897']}
-                      style={styles.genderGradient}>
+                />
+              </TouchableOpacity>
+              <DateTimePickerModal
+                isVisible={isDatePickerVisible}
+                mode="date"
+                date={user.dob || new Date(2000, 0, 1)}
+                maximumDate={new Date()}
+                minimumDate={new Date(1950, 0, 1)}
+                onConfirm={handleDateConfirm}
+                onCancel={handleDateCancel}
+                confirmTextIOS="Xác nhận"
+                cancelTextIOS="Hủy"
+                locale="vi_VN"
+                display="default"
+                modalStyleIOS={{
+                  backgroundColor: 'rgba(0,0,0,0.5)',
+                }}
+                pickerContainerStyleIOS={{
+                  backgroundColor: 'white',
+                  borderRadius: 20,
+                  margin: 20,
+                  padding: 20,
+                }}
+              />
+            </View>
+            {/* Gender Selection */}
+            <View style={styles.genderSection}>
+              <TextComponent label="Giới tính" styles={styles.genderLabel} />
+              <View style={styles.genderContainer}>
+                {['Nam', 'Nữ', 'Khác'].map(option => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.genderOption,
+                      user.gender === option && styles.genderOptionSelected,
+                    ]}
+                    onPress={() => onChangeUserInfo('gender', option)}
+                    activeOpacity={0.7}>
+                    {user.gender === option ? (
+                      <LinearGradient
+                        colors={['#2C698D', '#00C897']}
+                        style={styles.genderGradient}>
+                        <TextComponent
+                          label={option}
+                          styles={styles.genderTextSelected}
+                        />
+                      </LinearGradient>
+                    ) : (
                       <TextComponent
                         label={option}
-                        styles={styles.genderTextSelected}
+                        styles={styles.genderText}
                       />
-                    </LinearGradient>
-                  ) : (
-                    <TextComponent label={option} styles={styles.genderText} />
-                  )}
-                </TouchableOpacity>
-              ))}
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Save Button */}
-        <View style={styles.saveButtonContainer}>
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleSaveProfile}
-            activeOpacity={0.8}>
-            <LinearGradient
-              colors={['#00C897', '#2C698D']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-              style={styles.saveButtonGradient}>
-              <Icon
-                name="save"
-                size={20}
-                color="#fff"
-                style={styles.saveIcon}
-              />
-              <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
+          {/* Save Button */}
+          <View style={styles.saveButtonContainer}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSaveProfile}
+              activeOpacity={0.8}>
+              <LinearGradient
+                colors={['#00C897', '#2C698D']}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+                style={styles.saveButtonGradient}>
+                <Icon
+                  name="save"
+                  size={20}
+                  color="#fff"
+                  style={styles.saveIcon}
+                />
+                <TextComponent
+                  label="Lưu thay đổi"
+                  styles={styles.saveButtonText}
+                />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </ContainerComponent>
       </ContainerComponent>
-    </ContainerComponent>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -355,7 +434,7 @@ const styles = StyleSheet.create({
   },
   avatarSection: {
     alignItems: 'center',
-    marginTop: -30,
+    marginTop: -22,
     marginBottom: 30,
   },
   avatarContainer: {
@@ -368,30 +447,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 8,
-    shadowColor: '#667eea',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    borderWidth: 0.5,
   },
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#00C897',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#fff',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
+
   faceSetupButton: {
     borderRadius: 25,
     elevation: 4,
@@ -478,9 +536,7 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     backgroundColor: '#fff',
   },
-  genderOptionSelected: {
-    borderColor: '#2C698D',
-  },
+  genderOptionSelected: {},
   genderGradient: {
     paddingVertical: 14,
     alignItems: 'center',

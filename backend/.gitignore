@@ -11,7 +11,7 @@ logs/
 # IDE
 .vscode/
 .idea/
-
+./uploads
 # OS
 .DS_Store
 Thumbs.db

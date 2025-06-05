@@ -123,15 +123,21 @@ const HomeScreen = ({navigation}: any) => {
 
   const HeaderHome = () => {
     return (
-      <RowComponent styles={{marginVertical: 12, paddingHorizontal: 12}}>
+      <RowComponent styles={{marginVertical: 12, paddingHorizontal: 16}}>
         <RowComponent styles={{flex: 1, gap: 12}}>
-          <TouchableOpacity
-            onPress={onChangeMenuModal}
-            style={{justifyContent: 'center'}}>
-            <Image
-              source={require('../../assets/img/foto_Perfil.png')}
-              style={{height: 48, width: 48}}
-            />
+          <TouchableOpacity onPress={onChangeMenuModal} style={{}}>
+            {user.profileImageUrl ? (
+              <Image
+                source={{
+                  uri: user.profileImageUrl,
+                }}
+                style={styles.img}
+              />
+            ) : (
+              <View style={styles.img}>
+                <TextComponent label={user.fullName.slice(0, 1)[0]} />
+              </View>
+            )}
           </TouchableOpacity>
           <View>
             <TextComponent
@@ -371,6 +377,15 @@ const HomeScreen = ({navigation}: any) => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
+  img: {
+    borderRadius: 100,
+    borderWidth: 0.5,
+    height: 48,
+    width: 48,
+    backgroundColor: appColors.textGrey + '46',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   textName: {
     fontStyle: 'italic',
     fontWeight: 'bold',

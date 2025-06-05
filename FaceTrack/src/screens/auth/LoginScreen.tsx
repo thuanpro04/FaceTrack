@@ -6,7 +6,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   ButtonComponent,
   ContainerComponent,
@@ -52,7 +52,7 @@ const LoginScreen = ({navigation}: any) => {
     try {
       const res = await authServices.loginUser({email, password});
       if (res?.data) {
-        setTimeout(async() => {
+        setTimeout(async () => {
           dispath(addAuth(res.data));
           await AsyncStorage.setItem('user', JSON.stringify(res.data));
           showNotificating.activity(
@@ -76,7 +76,13 @@ const LoginScreen = ({navigation}: any) => {
       setErrors({other: error.response.data.message});
     }
   };
+  useEffect(() => {
+    const init = async () => {
+      const granted = await showNotificating.requestLocationPermission();
+    };
 
+    init();
+  }, []);
   return (
     <ContainerComponent>
       <ScrollView contentContainerStyle={{flexGrow: 1}}>

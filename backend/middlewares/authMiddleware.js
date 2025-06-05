@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const multer = require("multer");
 exports.protect = async (req, res, next) => {
   let accessToken = req.headers.authorization?.split(" ")[1];
   if (!accessToken) {
@@ -8,12 +9,13 @@ exports.protect = async (req, res, next) => {
     });
   }
   try {
-    const decoded=jwt.verify(accessToken,process.env.JWT_SECRET)
-    req.user=await User.findById(decoded.id).select("-password")
-    next()
+    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select("-password");
+    next();
   } catch (error) {
     res.status(401).json({
-        message:"Not authorized, token failed"
-    })
+      message: "Not authorized, token failed",
+    });
   }
 };
+

@@ -33,13 +33,7 @@ const AppRouter = () => {
       requestPermission();
     }
   }, [hasPermission]);
-  useEffect(() => {
-    const init = async () => {
-      const granted = await showNotificating.requestLocationPermission();
-    };
-
-    init();
-  }, []);
+  
   return (
     <>
       {isShowSplash ? (

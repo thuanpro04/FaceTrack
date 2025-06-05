@@ -23,7 +23,6 @@ const UserSchema = new mongoose.Schema(
       {
         code: {
           type: String,
-          required: true,
         },
         referredAt: {
           type: Date,

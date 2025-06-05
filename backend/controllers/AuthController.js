@@ -27,9 +27,11 @@ exports.registerUser = async (req, res) => {
     });
   }
   if (role === "staff") {
-    const isCodeInvalid = await checkReferred(codeBy);
-    if (isCodeInvalid) {
-      return res.status(404).json({ message: "Mã code không tồn tại" });
+    if (codeBy) {
+      const isCodeInvalid = await checkReferred(codeBy);
+      if (isCodeInvalid) {
+        return res.status(404).json({ message: "Mã code không tồn tại" });
+      }
     }
   }
   try {
@@ -42,7 +44,7 @@ exports.registerUser = async (req, res) => {
       email,
       password,
       role,
-      referredBy: { code: codeBy },
+      referredBy: { code: codeBy ?? null },
     });
     console.log("Đăng kí user thành công");
 
@@ -201,4 +203,12 @@ exports.getUserInfo = async (req, res) => {
       error: error.message,
     });
   }
+};
+exports.uploadImage = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+  const imageUrl = `http://localhost:3001/uploads/${req.file.filename}`;
+  
+  return res.status(200).json({ profileImageUrl: imageUrl });
 };
