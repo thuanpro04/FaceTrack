@@ -24,6 +24,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import FaceDetection, {Face} from '@react-native-ml-kit/face-detection';
+import { imageServices } from '../../services/imageService';
 
 const {width, height} = Dimensions.get('window');
 
@@ -96,18 +97,10 @@ const FaceRecognitionScreen = ({navigation}: any) => {
       simulateRecognition();
     }
   };
-  const formatFileUri = (filePath: string) => {
-    if (filePath.startsWith('file://') || filePath.startsWith('content://')) {
-      return filePath;
-    }
-    if (filePath.startsWith('/')) {
-      return `file://${filePath}`;
-    }
-    return `file://${filePath}`;
-  };
+
   const detectFacesFromPhoto = async (photoPath: string) => {
     try {
-      const formattedUri = formatFileUri(photoPath);
+      const formattedUri = imageServices.formatFileUri(photoPath);
       const detectedFaces: Face[] = await FaceDetection.detect(formattedUri, {
         performanceMode: 'fast', // so sánh nhanh
         landmarkMode: 'none', // tắt nhận dạng mắt mũi...

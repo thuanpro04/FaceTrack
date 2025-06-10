@@ -107,7 +107,7 @@ const HomeScreen = ({navigation}: any) => {
       console.log('Chưa được cấp quyền vị trí');
       await showNotificating.requestLocationPermission();
     }
-    navigation.navigate('face');
+    navigation.navigate('face-scan');
   };
   useEffect(() => {
     const init = async () => {

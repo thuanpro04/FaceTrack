@@ -20,11 +20,56 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {removeAuth} from '../../redux/slices/authSlice';
 import Feather from 'react-native-vector-icons/Feather';
 import InputCodeModal from './InputCodeModal';
+import { Electricity, Happyemoji } from 'iconsax-react-native';
 interface Props {
   visible: boolean;
   onClose: () => void;
   navigation: any;
 }
+const menu = [
+  {
+    id: 'edit',
+    label: 'Editar',
+    icon: (
+      <MaterialIcons
+        name="mode-edit"
+        size={appSize.iconMedium}
+        color={appColors.iconSecondary}
+      />
+    ),
+  },
+  {
+    id: 'code',
+    label: 'Code',
+    icon: (
+      <Electricity
+        size={appSize.iconMedium}
+        color={appColors.iconSecondary}
+      />
+    ),
+  },
+  {
+    id: 'faceId',
+    label: 'Face Setting',
+    icon: (
+      <Happyemoji
+        size={appSize.iconMedium}
+        color={appColors.iconSecondary}
+      />
+    ),
+  },
+  {
+    id: 'logout',
+    label: 'Sair',
+    icon: (
+      <MaterialIcons
+        name="logout"
+        size={appSize.iconMedium}
+        color={appColors.iconSecondary}
+      />
+    ),
+  },
+];
 const DropdownMenu = (props: Props) => {
   const {visible, onClose, navigation} = props;
   const [isVisible, setIsVisible] = useState(false);
@@ -32,21 +77,23 @@ const DropdownMenu = (props: Props) => {
   const dispatch = useDispatch();
 
   const handleItem = (key: string) => {
-    
+    onClose();
     switch (key) {
       case 'edit':
         navigation.navigate('edit');
-        onClose();
         break;
       case 'code':
         setIsCodeModal(true);
         break;
+      case 'faceId':
+        navigation.navigate('tutorial-face');
+        break;
       case 'logout':
         handleLogout();
-        onClose();
         break;
     }
   };
+
   const handleLogout = async () => {
     await AsyncStorage.removeItem('user');
     dispatch(removeAuth());
@@ -65,38 +112,15 @@ const DropdownMenu = (props: Props) => {
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <View style={styles.menu}>
-              <RowComponent
-                styles={styles.itemMenu}
-                onPress={() => handleItem('edit')}>
-                <MaterialIcons
-                  name="mode-edit"
-                  size={appSize.iconMedium}
-                  color={appColors.iconSecondary}
-                />
-                <TextComponent label="Editar" size={16} />
-              </RowComponent>
-              <SpaceComponent height={5} />
-              <RowComponent
-                styles={styles.itemMenu}
-                onPress={() => handleItem('code')}>
-                <Feather
-                  name="codepen"
-                  size={appSize.iconMedium}
-                  color={appColors.iconSecondary}
-                />
-                <TextComponent label="Code" size={16} />
-              </RowComponent>
-              <SpaceComponent height={5} />
-              <RowComponent
-                onPress={() => handleItem('logout')}
-                styles={[styles.itemMenu, {backgroundColor: '#B66DFF26'}]}>
-                <MaterialIcons
-                  name="logout"
-                  size={appSize.iconMedium}
-                  color={appColors.iconSecondary}
-                />
-                <TextComponent label="Sair" size={16} />
-              </RowComponent>
+              {menu.map(item => (
+                <RowComponent
+                  key={item.id}
+                  styles={styles.itemMenu}
+                  onPress={() => handleItem(item.id)}>
+                  {item.icon}
+                  <TextComponent label={item.label} size={16} />
+                </RowComponent>
+              ))}
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -131,5 +155,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 6,
     borderRadius: 8,
+    marginVertical: 5,
   },
 });
