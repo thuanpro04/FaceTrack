@@ -8,7 +8,11 @@ import {
   Image,
   Text,
 } from 'react-native';
-import {Camera, useCameraDevice} from 'react-native-vision-camera';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraFormat,
+} from 'react-native-vision-camera';
 import {
   ContainerComponent,
   RowComponent,
@@ -219,13 +223,21 @@ const SetupFaceID = ({navigation}: any) => {
       }
     };
   }, [isHolding]);
-
+  const formatCamera = useCameraFormat(frontCamera, [
+    {
+      photoResolution: {width: 640, height: 854},
+    },
+    {
+      fps: 30,
+    },
+  ]);
   return (
     <ContainerComponent styles={styles.container}>
       <View style={styles.cameraContainer}>
         {frontCamera && (
           <>
             <Camera
+              format={formatCamera}
               ref={cameraRef}
               style={styles.camera}
               device={frontCamera}
@@ -238,7 +250,12 @@ const SetupFaceID = ({navigation}: any) => {
               completedSteps={completedSteps}
               currentStep={currentStep}
             />
-            <PreviewThumbnail currentStep={currentStep} lastPhoto={lastPhoto} />
+            {lastPhoto && (
+              <PreviewThumbnail
+                currentStep={currentStep}
+                lastPhoto={lastPhoto}
+              />
+            )}
             {/* Enhanced Capture Button */}
             <CaptureButton
               isCapturing={isCapturing}

@@ -11,7 +11,7 @@ const PreviewThumbnail = (props: Props) => {
   const {lastPhoto, currentStep} = props;
 
   return (
-    lastPhoto && (
+     (
       <TouchableOpacity
         style={styles.thumbnailContainer}
         onPress={() => {

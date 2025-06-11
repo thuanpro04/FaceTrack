@@ -6,6 +6,8 @@ const port = process.env.PORT || 3001;
 const app = express();
 const authRouter = require("./routes/AuthRouter");
 const faceRouter = require("./routes/faceRouter");
+
+
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "*",
