@@ -9,6 +9,7 @@ import {
   View,
   Platform,
   ToastAndroid,
+  SafeAreaView,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import PermissionsPage from './PermissionsPage';
@@ -19,45 +20,47 @@ import {
   useCameraFormat,
   useCameraPermission,
 } from 'react-native-vision-camera';
-import {TextComponent} from '../../components/layout';
+import {
+  ContainerComponent,
+  SpaceComponent,
+  TextComponent,
+} from '../../components/layout';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import FaceDetection, {Face} from '@react-native-ml-kit/face-detection';
-import { imageServices } from '../../services/imageService';
+import {imageServices} from '../../services/imageService';
+import RecognizingModal from './Components/RecognizingModal';
+import OvalFace from './Components/OvalFace';
+import {showNotificating} from '../../utils/ShowNotification';
+import {useSelector} from 'react-redux';
+import {authSelector} from '../../redux/slices/authSlice';
 
 const {width, height} = Dimensions.get('window');
 
 const FaceRecognitionScreen = ({navigation}: any) => {
   const [cameraPosition, setCameraPosition] = useState('front');
   const [isCameraActive, setIsCameraActive] = useState(true);
-  const [torchEnabled, setTorchEnabled] = useState(false);
-  const [isRecognizing, setIsRecognizing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [recognitionProgress, setRecognitionProgress] = useState(0);
-  const [faces, setFaces] = useState<Face[]>([]);
-  const [detectionStatus, setDetectionStatus] = useState('');
+  const [isFace, setIsFace] = useState(false);
+  const [image, setImage] = useState('');
   const {hasPermission} = useCameraPermission();
   const frontDevice = useCameraDevice('front');
   const backDevice = useCameraDevice('back');
   const currentDevice = cameraPosition === 'front' ? frontDevice : backDevice;
+  const user = useSelector(authSelector);
   const cameraRef = useRef<Camera>(null);
-
   // Animations
   const fadeAnimation = useRef(new Animated.Value(0)).current;
   const pulseAnimation = useRef(new Animated.Value(1)).current;
   const scanAnimation = useRef(new Animated.Value(0)).current;
   const frameAnimation = useRef(new Animated.Value(0)).current;
-  const progressAnimation = useRef(new Animated.Value(0)).current;
   const glowAnimation = useRef(new Animated.Value(0)).current;
   //độ phân giải và 30 khung ảnh/ 1s
   const format = useCameraFormat(currentDevice, [
-    {photoResolution: 'max', fps: 30},
+    {photoResolution: {height: 854, width: 640}, fps: 30},
   ]);
-  // bật đèn
-  const toggleTorch = () => {
-    setTorchEnabled(!torchEnabled);
-  };
+
   // onChange camera
   const toggleCamera = () => {
     setCameraPosition(prev => (prev === 'front' ? 'back' : 'front'));
@@ -65,87 +68,58 @@ const FaceRecognitionScreen = ({navigation}: any) => {
     setTimeout(() => setIsCameraActive(true), 300);
   };
 
-  const simulateRecognition = () => {
-    setIsRecognizing(true);
-    setRecognitionProgress(0);
-
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setRecognitionProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setTimeout(() => {
-            setIsRecognizing(false);
-            setRecognitionProgress(0);
-            // Here you would navigate to success screen
-          }, 500);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
-
-    Animated.timing(progressAnimation, {
-      toValue: 1,
-      duration: 2000,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const takePicture = () => {
-    if (!isLoading && !isRecognizing) {
-      simulateRecognition();
-    }
-  };
-
-  const detectFacesFromPhoto = async (photoPath: string) => {
+  const takePicture = async () => {
+    if (!cameraRef.current) return;
     try {
-      const formattedUri = imageServices.formatFileUri(photoPath);
-      const detectedFaces: Face[] = await FaceDetection.detect(formattedUri, {
-        performanceMode: 'fast', // so sánh nhanh
-        landmarkMode: 'none', // tắt nhận dạng mắt mũi...
-        classificationMode: 'all', // phân loại biểu cảm
-        minFaceSize: 0.1, // khuôn mặt chiếm 10%/ảnh
-        contourMode: 'none', // đường viền khuôn mặt
-      });
-      // Lọc ra các khuôn mặt “bình thường”
-      const normalFaces = detectedFaces.filter(
-        face =>
-          (face.smilingProbability ?? 0) < 0.2 &&
-          (face.leftEyeOpenProbability ?? 1) > 0.8 &&
-          (face.rightEyeOpenProbability ?? 1) > 0.8 &&
-          Math.abs(face.rotationY ?? 0) < 10 &&
-          Math.abs(face.rotationX ?? 0) < 10 &&
-          Math.abs(face.rotationZ ?? 0) < 10,
-      );
-
-      if (normalFaces.length == 0) {
-        setDetectionStatus('Vui lòng nhìn thẳng vào màng hình và giữ yên.');
-        console.log('Vui lòng nhìn thẳng vào màng hình và giữ yên.');
-        return;
+      const options: any = {
+        qualityPrioritization: 'speed',
+        flash: 'off',
+      };
+      const photo = await cameraRef.current.takePhoto(options);
+      const result = await imageServices.checkDetectFacesFromPhoto(photo.path);
+      if (result) {
+        setIsFace(true);
+        setImage(photo.path);
+      } else {
+        setIsFace(false);
       }
-      setFaces(normalFaces);
-      console.log('Detected face: ', normalFaces);
-    } catch (error) {
-      console.error('Face detection error:', error);
+    } catch (error: any) {
+      console.log('error: ', error.message);
     }
   };
-
+  const handleRecognizeFace = async () => {
+    try {
+      setIsLoading(true);
+      const response = await imageServices.timekeepingStaff(user._id, image);
+      // Log toàn bộ response object
+      console.log('📋 Full Response Object:', response);
+      console.log('📋 Response Status:', response?.status);
+      console.log('📋 Response Data:', response?.data);
+      console.log('📋 Response Success:', response?.data?.success);
+      if (response && response.data) {
+        showNotificating.activity(
+          'success',
+          'Thành công',
+          'Bạn đã chấm công thành công.',
+        );
+        console.log('Face Data: ', response.data);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.log('Timekeeping staff error: ', error);
+      showNotificating.activity(
+        'error',
+        'Thất bại',
+        'Chấm công thất bại. Vui lòng thực hiện lại !!',
+      );
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
     if (!isCameraActive) return;
     const interval = setInterval(async () => {
-      if (!cameraRef.current) return;
-      try {
-        const options: any = {
-          qualityPrioritization: 'speed',
-          flash: 'off',
-        };
-        const photo = await cameraRef.current.takePhoto(options);
-        await detectFacesFromPhoto(photo.path);
-      } catch (error: any) {
-        console.log('error: ', error.message);
-      }
-    }, 5000);
+      await takePicture();
+    }, 2000);
     return () => clearInterval(interval);
   }, [isCameraActive]);
   // Animation effects
@@ -226,7 +200,7 @@ const FaceRecognitionScreen = ({navigation}: any) => {
   if (currentDevice == null) return <NoCameraDeviceError />;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar
         barStyle="light-content"
         backgroundColor="transparent"
@@ -250,100 +224,17 @@ const FaceRecognitionScreen = ({navigation}: any) => {
         photo
         enableZoomGesture
         format={format}
-        torch={torchEnabled ? 'on' : 'off'}
       />
 
       {/* Dark overlay */}
       <View style={styles.overlay} />
-
+      <View style={{bottom: 28}}>
+        <OvalFace borderColor={isFace ? '#00d4ff' : '#004466'} />
+      </View>
       {/* Face Detection Overlay */}
       <Animated.View style={[styles.faceOverlay, {opacity: fadeAnimation}]}>
         {/* Face Frame with animated corners */}
         <View style={styles.faceFrame}>
-          {/* Animated corners */}
-          <Animated.View
-            style={[
-              styles.corner,
-              styles.topLeft,
-              {
-                opacity: frameAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.6, 1],
-                }),
-                transform: [
-                  {
-                    scale: frameAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.95, 1.05],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.corner,
-              styles.topRight,
-              {
-                opacity: frameAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.6, 1],
-                }),
-              },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.corner,
-              styles.bottomLeft,
-              {
-                opacity: frameAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.6, 1],
-                }),
-              },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.corner,
-              styles.bottomRight,
-              {
-                opacity: frameAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.6, 1],
-                }),
-              },
-            ]}
-          />
-
-          {/* Center crosshair */}
-          <View style={styles.crosshair}>
-            <Animated.View
-              style={[
-                styles.crosshairHorizontal,
-                {
-                  opacity: glowAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.5, 1],
-                  }),
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                styles.crosshairVertical,
-                {
-                  opacity: glowAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.5, 1],
-                  }),
-                },
-              ]}
-            />
-          </View>
-
           {/* Scanning line */}
           <Animated.View
             style={[
@@ -361,6 +252,7 @@ const FaceRecognitionScreen = ({navigation}: any) => {
                   inputRange: [0, 0.1, 0.9, 1],
                   outputRange: [0, 1, 1, 0],
                 }),
+                backgroundColor: isFace ? '#00d4ff' : '#004466',
               },
             ]}
           />
@@ -381,10 +273,15 @@ const FaceRecognitionScreen = ({navigation}: any) => {
               ],
             },
           ]}>
-          <MaterialIcons name="face" size={24} color="#00d4ff" />
-          <Text style={styles.instructionText}>
-            Đặt khuôn mặt vào khung và giữ yên
-          </Text>
+          <MaterialIcons
+            name="face"
+            size={24}
+            color={isFace ? '#00d4ff' : '#0077aa'}
+          />
+          <TextComponent
+            label="Đặt khuôn mặt vào khung và giữ yên"
+            styles={styles.instructionText}
+          />
         </Animated.View>
       </Animated.View>
 
@@ -396,80 +293,23 @@ const FaceRecognitionScreen = ({navigation}: any) => {
           activeOpacity={0.7}>
           <Ionicons name="close" size={28} color="white" />
         </TouchableOpacity>
-
-        <View style={styles.topRightControls}>
-          {currentDevice === backDevice && (
-            <TouchableOpacity
-              style={[
-                styles.controlBtn,
-                torchEnabled && styles.activeControlBtn,
-              ]}
-              onPress={toggleTorch}
-              activeOpacity={0.7}>
-              <Ionicons
-                name={torchEnabled ? 'flashlight' : 'flashlight-outline'}
-                size={24}
-                color={torchEnabled ? '#FFD700' : 'white'}
-              />
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={styles.controlBtn}
-            onPress={toggleCamera}
-            activeOpacity={0.7}>
-            <Ionicons name="camera-reverse" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.controlBtn}
+          onPress={toggleCamera}
+          activeOpacity={0.7}>
+          <Ionicons name="camera-reverse" size={24} color="white" />
+        </TouchableOpacity>
       </View>
 
       {/* Recognition Overlay */}
-      {isRecognizing && (
-        <View style={styles.recognitionOverlay}>
-          <LinearGradient
-            colors={['rgba(0, 212, 255, 0.1)', 'rgba(0, 0, 0, 0.9)']}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.recognitionContent}>
-            <View style={styles.progressContainer}>
-              <Animated.View
-                style={[
-                  styles.progressRing,
-                  {
-                    transform: [
-                      {
-                        rotate: progressAnimation.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0deg', '360deg'],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              />
-              <View style={styles.progressCenter}>
-                <MaterialIcons name="face" size={40} color="#00d4ff" />
-                <Text style={styles.progressText}>{recognitionProgress}%</Text>
-              </View>
-            </View>
-
-            <Text style={styles.recognitionText}>
-              Đang nhận diện khuôn mặt...
-            </Text>
-            <Text style={styles.recognitionSubtext}>
-              Vui lòng giữ yên trong giây lát
-            </Text>
-          </View>
-        </View>
-      )}
-
+      {isLoading && <RecognizingModal isLoading={isLoading} />}
       {/* Bottom Controls */}
-      {isCameraActive && !isRecognizing && (
+      {isCameraActive && (
         <View style={styles.bottomControls}>
           <TouchableOpacity
             style={[styles.captureBtn, isLoading && styles.captureBtnDisabled]}
-            onPress={takePicture}
-            disabled={isLoading}
+            onPress={handleRecognizeFace}
+            disabled={!isFace}
             activeOpacity={0.8}>
             <LinearGradient
               colors={['#00d4ff', '#0099cc', '#006699']}
@@ -490,9 +330,10 @@ const FaceRecognitionScreen = ({navigation}: any) => {
           <Text style={styles.captureHint}>
             Nhấn để chụp ảnh và xác thực khuôn mặt
           </Text>
+          <SpaceComponent height={22} />
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -525,67 +366,18 @@ const styles = StyleSheet.create({
     borderColor: '#00d4ff',
     borderWidth: 4,
   },
-  topLeft: {
-    top: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 12,
-  },
-  topRight: {
-    top: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderBottomWidth: 0,
-    borderTopRightRadius: 12,
-  },
-  bottomLeft: {
-    bottom: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 12,
-  },
-  bottomRight: {
-    bottom: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    borderBottomRightRadius: 12,
-  },
+
   crosshair: {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: [{translateX: -20}, {translateY: -20}],
   },
-  crosshairHorizontal: {
-    width: 40,
-    height: 3,
-    backgroundColor: '#00d4ff',
-    position: 'absolute',
-    top: 18.5,
-    shadowColor: '#00d4ff',
-    shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-  },
-  crosshairVertical: {
-    width: 3,
-    height: 40,
-    backgroundColor: '#00d4ff',
-    position: 'absolute',
-    left: 18.5,
-    shadowColor: '#00d4ff',
-    shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-  },
+
   scanLine: {
     position: 'absolute',
     width: '100%',
     height: 4,
-    backgroundColor: '#00d4ff',
     shadowColor: '#00d4ff',
     shadowOffset: {width: 0, height: 0},
     shadowOpacity: 1,
@@ -619,10 +411,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     zIndex: 10,
   },
-  topRightControls: {
-    flexDirection: 'row',
-    gap: 12,
-  },
+
   controlBtn: {
     width: 50,
     height: 50,
@@ -640,50 +429,6 @@ const styles = StyleSheet.create({
   closeBtn: {
     backgroundColor: 'rgba(220, 20, 60, 0.8)',
     borderColor: 'rgba(220, 20, 60, 0.5)',
-  },
-  recognitionOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 15,
-  },
-  recognitionContent: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    padding: 40,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 212, 255, 0.3)',
-  },
-  progressContainer: {
-    position: 'relative',
-    width: 120,
-    height: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  progressRing: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 4,
-    borderColor: 'rgba(0, 212, 255, 0.3)',
-    borderTopColor: '#00d4ff',
-  },
-  progressCenter: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  progressText: {
-    color: '#00d4ff',
-    fontSize: 18,
-    fontWeight: '700',
   },
   recognitionText: {
     color: 'white',

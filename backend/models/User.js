@@ -40,7 +40,14 @@ const UserSchema = new mongoose.Schema(
       type: Date,
       default: null, // hoặc không cần khai báo default nếu muốn để undefined
     },
+    // Trạng thái hoạt động
+    status: {
+      type: String,
+      enum: ["active", "inactive", "pending", "error"],
+      default: "active",
+    },
   },
+
   {
     timestamps: true,
   }

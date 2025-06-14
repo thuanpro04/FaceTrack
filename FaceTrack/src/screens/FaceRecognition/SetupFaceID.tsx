@@ -29,15 +29,13 @@ import CaptureButton from './Components/CaptureButton';
 import PreviewThumbnail from './Components/PreviewThumbnail';
 import {imageServices} from '../../services/imageService';
 import {showNotificating} from '../../utils/ShowNotification';
+import {useSelector} from 'react-redux';
+import {authSelector} from '../../redux/slices/authSlice';
+import RecognizingModal from './Components/RecognizingModal';
 interface ImageInfo {
-  stepId: number;
-  stepName: string;
-  description: string;
-  imageData: {
-    base64: string;
-    width: number;
-    height: number;
-  };
+  userId: string;
+  fullName: string;
+  images: any[];
 }
 const faceSteps = [
   {
@@ -74,23 +72,25 @@ const SetupFaceID = ({navigation}: any) => {
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [faceInfo, setFaceInfo] = useState<ImageInfo[]>([]);
-  const [lastPhoto, setLastPhoto] = useState('');
+  const [lastPhoto, setLastPhoto] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [decryptedImage, setdecryptedImage] = useState('');
+
   const [completedSteps, setCompletedSteps] = useState<boolean[]>([
     false,
     false,
     false,
     false,
   ]);
+  const auth = useSelector(authSelector);
   const cameraRef = useRef<any>(null);
   const frontCamera = useCameraDevice('front');
   const [progress, setProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
   // Animation values
+
   const instructionFadeAnim = useRef(new Animated.Value(1)).current;
+
   const actionResultFace = async (result: any, photo: any) => {
     if (result?.status === 200) {
       // Move to next step or finish
@@ -109,44 +109,63 @@ const SetupFaceID = ({navigation}: any) => {
             }).start();
           });
         }, 1000);
-      }
-
-      setLastPhoto(`file://${photo.path}`);
-      const imageInfo = {
-        stepId: currentStep,
-        stepName: faceSteps[currentStep].title,
-        description: faceSteps[currentStep].subtitle,
-        imageData: {
-          // Mã hóa
-          base64: await imageServices.encryptImageToBase64(photo.path),
-          width: photo.width,
-          height: photo.height,
-        },
-      };
-      setFaceInfo(prev => {
-        const newPhotos = [...prev];
-        newPhotos[currentStep] = imageInfo;
-        return newPhotos;
+      } // Đảm bảo mảng luôn có 4 phần tử
+      setLastPhoto(prev => {
+        const newImages = Array(4).fill(null); // Khởi tạo mảng với 4 phần tử null
+        // Copy các giá trị cũ
+        prev.forEach((val, idx) => {
+          newImages[idx] = val;
+        });
+        // Thêm ảnh mới
+        newImages[currentStep] = `file://${photo.path}`;
+        return newImages;
       });
+
       const newCompletedSteps = [...completedSteps];
       newCompletedSteps[currentStep] = true;
       setCompletedSteps(newCompletedSteps);
+
       if (currentStep === faceSteps.length - 1) {
         setIsLoading(true);
-        // All steps completed
+        const encryptedImages = await Promise.all(
+          lastPhoto.map(item => imageServices.encryptImageToBase64(item)),
+        );
+
+        const faceInfo: ImageInfo = {
+          userId: auth._id,
+          fullName: auth.fullName,
+          images: encryptedImages,
+        };
         console.log('Face ID setup completed!', faceInfo);
         const response = await imageServices.ActionSaveFace(faceInfo);
         if (response && response.data) {
+          console.log('res: ', response.data);
+
           setIsLoading(false);
           navigation.navigate('home');
+          showNotificating.activity(
+            'success',
+            'Thành công',
+            'Face ID setup completed!',
+          );
         }
+        //  else {
+        //   navigation.goBack();
+        //   showNotificating.activity(
+        //     'error',
+        //     'Thất bại',
+        //     'Face ID setup failed!',
+        //   );
+        // }
         setIsLoading(false);
       }
     } else {
       console.log(result?.message);
       showNotificating.activity('error', 'Thất bại', result.message);
+      setIsLoading(false);
     }
   };
+
   const onPressCheckPhoto = async (step: number, photoPath: string) => {
     let result;
     switch (step) {
@@ -225,7 +244,7 @@ const SetupFaceID = ({navigation}: any) => {
   }, [isHolding]);
   const formatCamera = useCameraFormat(frontCamera, [
     {
-      photoResolution: {width: 640, height: 854},
+      photoResolution: {width: 640, height: 640},
     },
     {
       fps: 30,
@@ -250,12 +269,12 @@ const SetupFaceID = ({navigation}: any) => {
               completedSteps={completedSteps}
               currentStep={currentStep}
             />
-            {lastPhoto && (
+            {
               <PreviewThumbnail
                 currentStep={currentStep}
-                lastPhoto={lastPhoto}
+                lastPhoto={lastPhoto[currentStep - 1]}
               />
-            )}
+            }
             {/* Enhanced Capture Button */}
             <CaptureButton
               isCapturing={isCapturing}
@@ -266,6 +285,7 @@ const SetupFaceID = ({navigation}: any) => {
             />
           </>
         )}
+        {isLoading && <RecognizingModal isLoading={isLoading} />}
       </View>
     </ContainerComponent>
   );

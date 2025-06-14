@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://192.168.1.143:2403';
+export const BASE_URL = 'http://192.168.1.4:2403';
 export const API_PATHS = {
   AUTH: {
     LOGIN: '/api/v1/auth/login',
@@ -11,6 +11,7 @@ export const API_PATHS = {
   IMAGE: {
     UPLOAD_AVATAR: '/api/v1/auth/upload-avatar',
     UPLOAD_FACE:'/api/v1/face/upload-face',
-
+    TIMEKEEPING:'/api/v1/face/timkeeping'
   },
+
 };

@@ -3,6 +3,7 @@ import CryptoJS from 'react-native-crypto-js';
 import RNFS from 'react-native-fs';
 import axiosInstance from '../api/axiosInstance';
 import {API_PATHS} from '../api/apiPaths';
+import {showNotificating} from '../utils/ShowNotification';
 
 const formatFileUri = (filePath: string) => {
   if (filePath.startsWith('file://') || filePath.startsWith('content://')) {
@@ -144,7 +145,6 @@ const detectFacesFromPhotoStep4 = async (photoPath: string) => {
       classificationMode: 'all',
       minFaceSize: 0.1,
       contourMode: 'none',
-      
     });
     const smilingFaces = detecctedFaces.filter(
       face =>
@@ -189,6 +189,7 @@ const encryptImageToBase64 = async (imagePath: string) => {
     throw error;
   }
 };
+
 const decryptBase64Image = (encryptedData: string) => {
   try {
     // Giải mã
@@ -205,10 +206,56 @@ const decryptBase64Image = (encryptedData: string) => {
 };
 const ActionSaveFace = async (data: any) => {
   try {
-    return await axiosInstance.post(API_PATHS.IMAGE.UPLOAD_FACE, data);
+    const res = await axiosInstance.post(API_PATHS.IMAGE.UPLOAD_FACE, data);
+    return res;
   } catch (error) {
     console.log('Save face error: ', error);
   }
+};
+const checkDetectFacesFromPhoto = async (photoPath: string) => {
+  try {
+    const formattedUri = formatFileUri(photoPath);
+    const detectedFaces: Face[] = await FaceDetection.detect(formattedUri, {
+      performanceMode: 'fast', // so sánh nhanh
+      landmarkMode: 'none', // tắt nhận dạng mắt mũi...
+      classificationMode: 'all', // phân loại biểu cảm
+      minFaceSize: 0.1, // khuôn mặt chiếm 10%/ảnh
+      contourMode: 'none', // đường viền khuôn mặt
+    });
+    // Lọc ra các khuôn mặt “bình thường”
+    const normalFaces = detectedFaces.filter(
+      face =>
+        (face.smilingProbability ?? 0) < 0.2 &&
+        (face.leftEyeOpenProbability ?? 1) > 0.8 &&
+        (face.rightEyeOpenProbability ?? 1) > 0.8 &&
+        Math.abs(face.rotationY ?? 0) < 10 &&
+        Math.abs(face.rotationX ?? 0) < 10 &&
+        Math.abs(face.rotationZ ?? 0) < 10,
+    );
+
+    if (normalFaces.length == 0) {
+      console.log('Vui lòng nhìn thẳng vào màng hình và giữ yên.');
+
+      return false;
+    }
+    console.log('Detected face: ', normalFaces);
+    return true;
+  } catch (error) {
+    console.error('Face detection error:', error);
+  }
+};
+const timekeepingStaff = async (userId: string, imageUrl: string) => {
+  const image = await encryptImageToBase64(imageUrl);
+  console.log({
+    userId,
+    image,
+  });
+
+  const res = await axiosInstance.post(API_PATHS.IMAGE.TIMEKEEPING, {
+    userId,
+    image,
+  });
+  return res;
 };
 export const imageServices = {
   formatFileUri,
@@ -219,4 +266,6 @@ export const imageServices = {
   encryptImageToBase64,
   decryptBase64Image,
   ActionSaveFace,
+  checkDetectFacesFromPhoto,
+  timekeepingStaff,
 };

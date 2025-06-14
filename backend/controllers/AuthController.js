@@ -209,6 +209,9 @@ exports.uploadImage = async (req, res) => {
     return res.status(400).json({ message: "No file uploaded" });
   }
   const imageUrl = `http://localhost:3001/uploads/${req.file.filename}`;
-  
+
   return res.status(200).json({ profileImageUrl: imageUrl });
+};
+exports.getUserById = async (id) => {
+  return await User.findById(id);
 };

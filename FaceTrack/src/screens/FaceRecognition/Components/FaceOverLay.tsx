@@ -8,70 +8,31 @@ import {
 import appColors from '../../../constants/appColors';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
-const overlaySize = screenWidth * 0.65;
-const overlayHeight = overlaySize * 1.3;
-const overlayTop = screenHeight * 0.28;
+import OvalFace from './OvalFace';
+
 interface Props {
   currentStep: number;
   completedSteps: boolean[];
-  faceSteps:any[]
+  faceSteps: any[];
 }
 const FaceOverLay = (props: Props) => {
-  const {currentStep, completedSteps,faceSteps} = props;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const {currentStep, completedSteps, faceSteps} = props;
   const instructionFadeAnim = useRef(new Animated.Value(1)).current;
-   useEffect(() => {
-      const pulse = () => {
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.05,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ]).start(() => pulse());
-      };
-      pulse();
-    }, []);
-  
-    // Instruction fade animation
-    useEffect(() => {
-      Animated.timing(instructionFadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-    }, [currentStep]);
+  // Instruction fade animation
+  useEffect(() => {
+    Animated.timing(instructionFadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [currentStep]);
   return (
     <View style={styles.overlayContainer}>
       {/* Background mờ */}
       <View style={styles.overlayBackground} />
 
       {/* Animated Oval Frame */}
-      <Animated.View
-        style={[
-          styles.ovalFrame,
-          {
-            width: overlaySize,
-            height: overlayHeight,
-            top: overlayTop,
-            left: (screenWidth - overlaySize) / 2,
-            borderColor: faceSteps[currentStep].color,
-            transform: [{scale: pulseAnim}],
-          },
-        ]}>
-        {/* Corner indicators */}
-        <View style={[styles.cornerIndicator, styles.topLeft]} />
-        <View style={[styles.cornerIndicator, styles.topRight]} />
-        <View style={[styles.cornerIndicator, styles.bottomLeft]} />
-        <View style={[styles.cornerIndicator, styles.bottomRight]} />
-      </Animated.View>
-
+      <OvalFace borderColor={faceSteps[currentStep].color} />
       {/* Progress Steps at top */}
       <View style={styles.stepsContainer}>
         <RowComponent styles={styles.stepsRow}>
@@ -178,48 +139,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  ovalFrame: {
-    position: 'absolute',
-    borderWidth: 3,
-    borderRadius: 200,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-  },
-  cornerIndicator: {
-    position: 'absolute',
-    width: 20,
-    height: 20,
-    borderWidth: 3,
-    borderColor: appColors.white,
-  },
-  topLeft: {
-    top: -3,
-    left: -3,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 8,
-  },
-  topRight: {
-    top: -3,
-    right: -3,
-    borderLeftWidth: 0,
-    borderBottomWidth: 0,
-    borderTopRightRadius: 8,
-  },
-  bottomLeft: {
-    bottom: -3,
-    left: -3,
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 8,
-  },
-  bottomRight: {
-    bottom: -3,
-    right: -3,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    borderBottomRightRadius: 8,
   },
   stepsContainer: {
     position: 'absolute',

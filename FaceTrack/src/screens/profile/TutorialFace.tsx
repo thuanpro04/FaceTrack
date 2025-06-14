@@ -1,5 +1,5 @@
 import {StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
   ContainerComponent,
   RowComponent,
@@ -10,39 +10,51 @@ import appColors from '../../constants/appColors';
 import Entypo from 'react-native-vector-icons/Entypo';
 import {appSize} from '../../constants/appSize';
 import HeaderComponent from '../../components/layout/HeaderComponent';
+import {useCameraPermission} from 'react-native-vision-camera';
 
+const tutorio = [
+  {
+    id: 1,
+    label: 'Đặt khuôn mặt vào khung tròn',
+  },
+  {
+    id: 2,
+    label: 'Giữ khoảng cách 50-80cm',
+  },
+  {
+    id: 3,
+    label: 'Ánh sáng đầy đủ, không ngược sáng',
+  },
+  {
+    id: 4,
+    label: 'Nhìn thẳng vào camera',
+  },
+  {
+    id: 5,
+    label: 'Không đeo khẩu trang hoặc kính cận',
+  },
+  ,
+  {
+    id: 6,
+    label: 'Nhấn giữ nút chụp trong 3s',
+  },
+];
 const TutorialFace = ({navigation}: any) => {
-  const tutorio = [
-    {
-      id: 1,
-      label: 'Đặt khuôn mặt vào khung tròn',
-    },
-    {
-      id: 2,
-      label: 'Giữ khoảng cách 50-80cm',
-    },
-    {
-      id: 3,
-      label: 'Ánh sáng đầy đủ, không ngược sáng',
-    },
-    {
-      id: 4,
-      label: 'Nhìn thẳng vào camera',
-    },
-    {
-      id: 5,
-      label: 'Không đeo khẩu trang hoặc kính cận',
-    },
-    ,
-    {
-      id: 6,
-      label: 'Nhấn giữ nút chụp trong 3s',
-    },
-  ];
+  const {hasPermission, requestPermission} = useCameraPermission();
+
+  useEffect(() => {
+    if (!hasPermission) {
+      requestPermission();
+    }
+  }, [hasPermission]);
+
   return (
     <ContainerComponent styles={styles.container}>
       <ContainerComponent isScroll>
-        <HeaderComponent navigation={navigation} labelRight="next" />
+        <HeaderComponent
+          navigation={hasPermission && navigation}
+          labelRight="next"
+        />
         <View style={styles.instructionsContainer}>
           <TextComponent
             label="Hướng dẫn chụp ảnh:"
