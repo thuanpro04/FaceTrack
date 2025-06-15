@@ -1,8 +1,9 @@
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import {Image} from 'react-native';
-import {TextComponent} from '../../../components/layout';
-import appColors from '../../../constants/appColors';
+import appColors from '../../../../constants/appColors';
+import { TextComponent } from '../../../../components/layout';
+
 interface Props {
   lastPhoto?: string;
   currentStep: number;

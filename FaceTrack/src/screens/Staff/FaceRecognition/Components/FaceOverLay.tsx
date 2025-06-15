@@ -1,14 +1,11 @@
 import {Animated, Dimensions, StyleSheet, Text, View} from 'react-native';
 import React, {useEffect, useRef} from 'react';
-import {
-  RowComponent,
-  SpaceComponent,
-  TextComponent,
-} from '../../../components/layout';
-import appColors from '../../../constants/appColors';
+
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import OvalFace from './OvalFace';
+import { RowComponent, SpaceComponent, TextComponent } from '../../../../components/layout';
+import appColors from '../../../../constants/appColors';
 
 interface Props {
   currentStep: number;
@@ -99,6 +96,7 @@ const FaceOverLay = (props: Props) => {
             color={appColors.white}
           />
           <SpaceComponent height={12} />
+
           <View style={styles.stepCounter}>
             <TextComponent
               label={`${currentStep + 1}/${faceSteps.length}`}

@@ -5,26 +5,28 @@ export const menu = [
     id: 1,
     title: 'Đợi',
     description: 'Kiểm duyệt',
-    Icon: Secure, // hoặc undefined
+    icon: Secure, // hoặc undefined
+    screen: 'awaiting',
   },
-
   {
     id: 2,
     title: 'Lịch sử',
-    description: 'Quét mã',
-    Icon: History,
+    description: 'Điểm danh',
+    icon: History,
+    screen: 'attendance-history',
   },
   {
     id: 3,
     title: 'Thống kê',
     description: 'Hoạt động',
-    Icon: Statistics,
+    icon: Statistics,
+    screen: 'statitics',
   },
   {
     id: 4,
     title: 'Danh sách',
     description: 'Quản lý',
-    Icon: Staff, // <-- chỉ tham chiếu, không render
+    icon: Staff, // <-- chỉ tham chiếu, không render
+    screen: 'manage-list',
   },
 ];
-

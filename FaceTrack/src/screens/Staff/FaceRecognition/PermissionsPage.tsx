@@ -1,9 +1,9 @@
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import appColors from '../../constants/appColors';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {TextComponent} from '../../components/layout';
 import {useCameraPermission} from 'react-native-vision-camera';
+import appColors from '../../../constants/appColors';
+import { TextComponent } from '../../../components/layout';
 const PermissionsPage = () => {
   const {requestPermission} = useCameraPermission();
   return (

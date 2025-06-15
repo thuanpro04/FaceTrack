@@ -20,7 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {removeAuth} from '../../redux/slices/authSlice';
 import Feather from 'react-native-vector-icons/Feather';
 import InputCodeModal from './InputCodeModal';
-import { Electricity, Happyemoji } from 'iconsax-react-native';
+import {Electricity, Happyemoji} from 'iconsax-react-native';
 interface Props {
   visible: boolean;
   onClose: () => void;
@@ -42,20 +42,14 @@ const menu = [
     id: 'code',
     label: 'Code',
     icon: (
-      <Electricity
-        size={appSize.iconMedium}
-        color={appColors.iconSecondary}
-      />
+      <Electricity size={appSize.iconMedium} color={appColors.iconSecondary} />
     ),
   },
   {
     id: 'faceId',
     label: 'Face Setting',
     icon: (
-      <Happyemoji
-        size={appSize.iconMedium}
-        color={appColors.iconSecondary}
-      />
+      <Happyemoji size={appSize.iconMedium} color={appColors.iconSecondary} />
     ),
   },
   {
@@ -75,20 +69,21 @@ const DropdownMenu = (props: Props) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isCodeModal, setIsCodeModal] = useState(false);
   const dispatch = useDispatch();
-
   const handleItem = (key: string) => {
-    onClose();
     switch (key) {
       case 'edit':
+        onClose();
         navigation.navigate('edit');
         break;
       case 'code':
         setIsCodeModal(true);
         break;
       case 'faceId':
+        onClose();
         navigation.navigate('tutorial-face');
         break;
       case 'logout':
+        onClose();
         handleLogout();
         break;
     }
@@ -106,6 +101,7 @@ const DropdownMenu = (props: Props) => {
     setIsCodeModal(false);
     onClose();
   };
+
   return !isCodeModal ? (
     <Modal visible={isVisible} transparent onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>

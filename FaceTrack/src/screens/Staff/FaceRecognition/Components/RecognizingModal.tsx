@@ -2,7 +2,7 @@ import {Animated, StyleSheet, Text, View} from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {TextComponent} from '../../../components/layout';
+import { TextComponent } from '../../../../components/layout';
 interface Props {
   isLoading: boolean;
 }

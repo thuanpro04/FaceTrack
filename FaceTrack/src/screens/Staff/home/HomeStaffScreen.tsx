@@ -5,23 +5,24 @@ import {useSelector} from 'react-redux';
 import Geolocation from '@react-native-community/geolocation';
 import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import SearchComponent from '../../components/Input/SearchComponent';
+import {authSelector} from '../../../redux/slices/authSlice';
+import {menu} from '../../data/data';
+import {showNotificating} from '../../../utils/ShowNotification';
 import {
   ContainerComponent,
   RowComponent,
   SpaceComponent,
   TextComponent,
-} from '../../components/layout';
-import AnimatedCameraIcon from '../../components/layout/AnimatedCameraIcon';
-import CardComponent from '../../components/layout/CardComponent';
-import appColors from '../../constants/appColors';
-import {appSize} from '../../constants/appSize';
-import DropdownMenu from '../modals/DropdownMenu';
-import {authSelector} from '../../redux/slices/authSlice';
-import {showNotificating} from '../../utils/ShowNotification';
-import {menu} from '../data/data';
-import PlanBannerModal from '../modals/PlanBannerModal';
-import LoadingModal from '../modals/LoadingModal';
+} from '../../../components/layout';
+import appColors from '../../../constants/appColors';
+import {appSize} from '../../../constants/appSize';
+import DropdownMenu from '../../modals/DropdownMenu';
+import SearchComponent from '../../../components/Input/SearchComponent';
+import AnimatedCameraIcon from '../../../components/layout/AnimatedCameraIcon';
+import CardComponent from '../../../components/layout/CardComponent';
+import PlanBannerModal from '../../modals/PlanBannerModal';
+import LoadingModal from '../../modals/LoadingModal';
+
 type Place = {
   title: string;
   distance: number;
@@ -31,7 +32,7 @@ type Place = {
     lng: number;
   };
 };
-const HomeScreen = ({navigation}: any) => {
+const HomeStaffScreen = ({navigation}: any) => {
   const [isVisible, setVisible] = useState(false);
   const [currentAddress, setCurrentAddress] = useState<Place>({
     address: '',
@@ -102,12 +103,15 @@ const HomeScreen = ({navigation}: any) => {
       },
     );
   };
-  const onNavigation = async () => {
+  const onNavigationFaceScan = async () => {
     if (hasPermissionLocal) {
       console.log('Chưa được cấp quyền vị trí');
       await showNotificating.requestLocationPermission();
     }
     navigation.navigate('face-scan');
+  };
+  const onNavigation = (name: string) => {
+    navigation.navigate(`${name}`);
   };
   useEffect(() => {
     const init = async () => {
@@ -250,7 +254,7 @@ const HomeScreen = ({navigation}: any) => {
             </View>
           </View>
           {/* thiết kế biểu tượng  */}
-          <AnimatedCameraIcon onNavigation={onNavigation} />
+          <AnimatedCameraIcon onNavigation={onNavigationFaceScan} />
         </View>
         <View style={{marginVertical: 18}}>
           <RowComponent styles={{paddingHorizontal: 12}}>
@@ -275,11 +279,11 @@ const HomeScreen = ({navigation}: any) => {
           </RowComponent>
           <RowComponent styles={{gap: 12, justifyContent: 'center'}}>
             {firstRow.map(item => {
-              const Icon = item.Icon;
+              const Icon = item.icon;
               return (
                 <CardComponent
                   key={item.id}
-                  onPress={() => {}}
+                  onPress={() => onNavigation(item.screen)}
                   title={item.title}
                   description={item.description}
                   img={<Icon height={110} width={'100%'} />}
@@ -289,11 +293,11 @@ const HomeScreen = ({navigation}: any) => {
           </RowComponent>
           <RowComponent styles={{gap: 12, justifyContent: 'center'}}>
             {secondRow.map(item => {
-              const Icon = item.Icon;
+              const Icon = item.icon;
               return (
                 <CardComponent
                   key={item.id}
-                  onPress={() => {}}
+                  onPress={() => onNavigation(item.screen)}
                   title={item.title}
                   description={item.description}
                   img={<Icon height={110} width={'100%'} />}
@@ -374,7 +378,7 @@ const HomeScreen = ({navigation}: any) => {
   );
 };
 
-export default HomeScreen;
+export default HomeStaffScreen;
 
 const styles = StyleSheet.create({
   img: {

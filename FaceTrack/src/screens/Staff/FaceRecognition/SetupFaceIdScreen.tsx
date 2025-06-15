@@ -1,37 +1,27 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  Dimensions,
-  StyleSheet,
-  TouchableOpacity,
-  View,
   Animated,
-  Image,
-  Text,
+  StyleSheet,
+  View
 } from 'react-native';
 import {
   Camera,
   useCameraDevice,
   useCameraFormat,
 } from 'react-native-vision-camera';
+import { useSelector } from 'react-redux';
 import {
-  ContainerComponent,
-  RowComponent,
-  SpaceComponent,
-  TextComponent,
-} from '../../components/layout';
-import appColors from '../../constants/appColors';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {appSize} from '../../constants/appSize';
+  ContainerComponent
+} from '../../../components/layout';
+import appColors from '../../../constants/appColors';
+import { authSelector } from '../../../redux/slices/authSlice';
+import { imageServices } from '../../../services/imageService';
+import { showNotificating } from '../../../utils/ShowNotification';
 import FaceOverLay from './Components/FaceOverLay';
-import RenderProgressRing from './Components/RenderProgressRing';
-import CaptureButton from './Components/CaptureButton';
 import PreviewThumbnail from './Components/PreviewThumbnail';
-import {imageServices} from '../../services/imageService';
-import {showNotificating} from '../../utils/ShowNotification';
-import {useSelector} from 'react-redux';
-import {authSelector} from '../../redux/slices/authSlice';
+import CaptureButton from './Components/CaptureButton';
 import RecognizingModal from './Components/RecognizingModal';
+
 interface ImageInfo {
   userId: string;
   fullName: string;
@@ -68,7 +58,7 @@ const faceSteps = [
   },
 ];
 
-const SetupFaceID = ({navigation}: any) => {
+const SetupFaceIdScreen = ({navigation}: any) => {
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -291,7 +281,7 @@ const SetupFaceID = ({navigation}: any) => {
   );
 };
 
-export default SetupFaceID;
+export default SetupFaceIdScreen;
 
 const styles = StyleSheet.create({
   container: {

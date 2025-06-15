@@ -1,6 +1,6 @@
 import {Animated, Dimensions, StyleSheet, Text, View} from 'react-native';
 import React, {ReactNode, useEffect, useRef} from 'react';
-import appColors from '../../../constants/appColors';
+import appColors from '../../../../constants/appColors';
 interface Props {
   borderColor: string;
 }

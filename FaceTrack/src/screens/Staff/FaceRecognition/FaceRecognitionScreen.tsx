@@ -12,29 +12,26 @@ import {
   SafeAreaView,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
-import PermissionsPage from './PermissionsPage';
-import NoCameraDeviceError from './NoCameraDeviceError';
+
 import {
   Camera,
   useCameraDevice,
   useCameraFormat,
   useCameraPermission,
 } from 'react-native-vision-camera';
-import {
-  ContainerComponent,
-  SpaceComponent,
-  TextComponent,
-} from '../../components/layout';
+
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
-import FaceDetection, {Face} from '@react-native-ml-kit/face-detection';
-import {imageServices} from '../../services/imageService';
 import RecognizingModal from './Components/RecognizingModal';
 import OvalFace from './Components/OvalFace';
-import {showNotificating} from '../../utils/ShowNotification';
 import {useSelector} from 'react-redux';
-import {authSelector} from '../../redux/slices/authSlice';
+import { authSelector } from '../../../redux/slices/authSlice';
+import { imageServices } from '../../../services/imageService';
+import { showNotificating } from '../../../utils/ShowNotification';
+import PermissionsPage from './PermissionsPage';
+import NoCameraDeviceError from './NoCameraDeviceError';
+import { SpaceComponent, TextComponent } from '../../../components/layout';
 
 const {width, height} = Dimensions.get('window');
 

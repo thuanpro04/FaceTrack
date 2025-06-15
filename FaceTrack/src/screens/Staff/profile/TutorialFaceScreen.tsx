@@ -1,16 +1,13 @@
 import {StyleSheet, Text, View} from 'react-native';
 import React, {useEffect} from 'react';
-import {
-  ContainerComponent,
-  RowComponent,
-  SpaceComponent,
-  TextComponent,
-} from '../../components/layout';
-import appColors from '../../constants/appColors';
+
 import Entypo from 'react-native-vector-icons/Entypo';
-import {appSize} from '../../constants/appSize';
-import HeaderComponent from '../../components/layout/HeaderComponent';
+
 import {useCameraPermission} from 'react-native-vision-camera';
+import { ContainerComponent, RowComponent, SpaceComponent, TextComponent } from '../../../components/layout';
+import HeaderComponent from '../../../components/layout/HeaderComponent';
+import appColors from '../../../constants/appColors';
+import { appSize } from '../../../constants/appSize';
 
 const tutorio = [
   {
@@ -39,7 +36,7 @@ const tutorio = [
     label: 'Nhấn giữ nút chụp trong 3s',
   },
 ];
-const TutorialFace = ({navigation}: any) => {
+const TutorialFaceScreen = ({navigation}: any) => {
   const {hasPermission, requestPermission} = useCameraPermission();
 
   useEffect(() => {
@@ -89,7 +86,7 @@ const TutorialFace = ({navigation}: any) => {
   );
 };
 
-export default TutorialFace;
+export default TutorialFaceScreen;
 
 const styles = StyleSheet.create({
   container: {

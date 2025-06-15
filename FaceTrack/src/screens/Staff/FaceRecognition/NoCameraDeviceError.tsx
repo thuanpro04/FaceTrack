@@ -1,8 +1,9 @@
 import {StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {TextComponent} from '../../components/layout';
-import appColors from '../../constants/appColors';
+import { TextComponent } from '../../../components/layout';
+import appColors from '../../../constants/appColors';
+
 const NoCameraDeviceError = () => {
   return (
     <View style={styles.centered}>

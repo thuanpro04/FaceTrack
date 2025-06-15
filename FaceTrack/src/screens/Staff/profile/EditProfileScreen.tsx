@@ -15,15 +15,17 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {ContainerComponent, TextComponent} from '../../components/layout';
-import appColors from '../../constants/appColors';
-import {appSize} from '../../constants/appSize';
-import ButtonImagePicker from '../../components/layout/ButtonImagePicker';
+
 import {useSelector} from 'react-redux';
-import {authSelector} from '../../redux/slices/authSlice';
 import {ImageOrVideo} from 'react-native-image-crop-picker';
-import {API_PATHS} from '../../api/apiPaths';
-import axiosInstance from '../../api/axiosInstance';
+import { authSelector } from '../../../redux/slices/authSlice';
+import axiosInstance from '../../../api/axiosInstance';
+import { API_PATHS } from '../../../api/apiPaths';
+import appColors from '../../../constants/appColors';
+import { appSize } from '../../../constants/appSize';
+import { ContainerComponent, TextComponent } from '../../../components/layout';
+import ButtonImagePicker from '../../../components/layout/ButtonImagePicker';
+
 const {width} = Dimensions.get('window');
 interface info {
   profileImageUrl?: string;
@@ -85,7 +87,7 @@ const EditProfileScreen = ({navigation}: any) => {
     });
     try {
       const response = await axiosInstance.post(
-        API_PATHS.IMAGE.UPLOAD_IMAGE,
+        API_PATHS.IMAGE.UPLOAD_AVATAR,
         formData,
         {
           headers: {
