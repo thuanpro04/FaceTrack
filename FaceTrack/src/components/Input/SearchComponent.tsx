@@ -4,13 +4,13 @@ import appColors from '../../constants/appColors';
 import {RowComponent} from '../layout';
 import Feather from 'react-native-vector-icons/Feather';
 import {appSize} from '../../constants/appSize';
-const SearchComponent = () => {
+interface Props {
+  onSearch: () => void;
+}
+const SearchComponent = (props: Props) => {
+  const {onSearch} = props;
   const [text, setText] = useState('');
-  const onSearch = async () => {
-    if (!text) return;
-    console.log(text);
-    setText('');
-  };
+
   return (
     <RowComponent
       styles={{

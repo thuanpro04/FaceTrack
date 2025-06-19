@@ -17,7 +17,7 @@ const HeaderComponent = (props: Props) => {
     <RowComponent
       styles={{
         alignItems: 'center',
-        marginBottom: 12,
+        marginVertical: 12,
       }}>
       {(icon && icon) ?? (
         <ArrowLeft

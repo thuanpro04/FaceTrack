@@ -22,6 +22,7 @@ import AnimatedCameraIcon from '../../../components/layout/AnimatedCameraIcon';
 import CardComponent from '../../../components/layout/CardComponent';
 import PlanBannerModal from '../../modals/PlanBannerModal';
 import LoadingModal from '../../modals/LoadingModal';
+import EnhancedCardComponent from '../Expand/Component/EnhancedCardComponent';
 
 type Place = {
   title: string;
@@ -44,8 +45,9 @@ const HomeStaffScreen = ({navigation}: any) => {
   const [hasPermissionLocal, setHasPermissionLocal] = useState<boolean>(false);
   const user = useSelector(authSelector);
   const [isBanner, setIsBanner] = useState(user.role === 'leader');
-  const firstRow = menu.slice(0, Math.ceil(menu.length / 2));
-  const secondRow = menu.slice(Math.ceil(menu.length / 2));
+  const filterMenu = menu.filter(item => item.isNew);
+  const firstRow = filterMenu.slice(0, Math.ceil(filterMenu.length / 2));
+  const secondRow = filterMenu.slice(Math.ceil(filterMenu.length / 2));
   const onCloseModal = () => {
     setVisible(false);
   };
@@ -217,14 +219,14 @@ const HomeStaffScreen = ({navigation}: any) => {
       status: 'Hợp lệ',
     },
   ];
-
+  const handleSearch = () => {};
   return (
     <ContainerComponent>
       <HeaderHome />
       <ContainerComponent
         isScroll
         styles={{paddingHorizontal: 12, marginTop: 0}}>
-        <SearchComponent />
+        <SearchComponent onSearch={handleSearch} />
         <SpaceComponent height={28} />
         <View style={{alignItems: 'center'}}>
           <View style={styles.infoBar}>
@@ -260,7 +262,7 @@ const HomeStaffScreen = ({navigation}: any) => {
           <RowComponent styles={{paddingHorizontal: 12}}>
             <TextComponent label="Chức năng" styles={styles.title} />
             <TouchableOpacity
-              onPress={() => console.log('Xem thêm')}
+              onPress={() => navigation.navigate('expand')}
               style={{
                 paddingHorizontal: 12,
                 borderRadius: 12,
@@ -277,35 +279,31 @@ const HomeStaffScreen = ({navigation}: any) => {
               />
             </TouchableOpacity>
           </RowComponent>
-          <RowComponent styles={{gap: 12, justifyContent: 'center'}}>
-            {firstRow.map(item => {
-              const Icon = item.icon;
+          <RowComponent styles={styles.row}>
+            {firstRow.map((item, index) => {
               return (
-                <CardComponent
+                <EnhancedCardComponent
                   key={item.id}
+                  item={item}
+                  index={index}
                   onPress={() => onNavigation(item.screen)}
-                  title={item.title}
-                  description={item.description}
-                  img={<Icon height={110} width={'100%'} />}
                 />
               );
             })}
           </RowComponent>
-          <RowComponent styles={{gap: 12, justifyContent: 'center'}}>
-            {secondRow.map(item => {
-              const Icon = item.icon;
+          <RowComponent styles={styles.row}>
+            {secondRow.map((item, index) => {
               return (
-                <CardComponent
+                <EnhancedCardComponent
                   key={item.id}
+                  item={item}
+                  index={index}
                   onPress={() => onNavigation(item.screen)}
-                  title={item.title}
-                  description={item.description}
-                  img={<Icon height={110} width={'100%'} />}
                 />
               );
             })}
           </RowComponent>
-          <SpaceComponent height={18} />
+          <SpaceComponent height={8} />
           <TextComponent label="📌 Quét gần nhất" styles={styles.title} />
           <SpaceComponent height={18} />
 
@@ -427,5 +425,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: appColors.gray,
     fontWeight: '500',
+  },
+  row: {
+    padding: 12,
+    justifyContent: 'space-between',
   },
 });

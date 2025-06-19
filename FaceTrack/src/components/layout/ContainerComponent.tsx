@@ -40,6 +40,11 @@ const ContainerComponent = (props: Props) => {
         },
         styles,
       ]}>
+      <StatusBar
+        backgroundColor="transparent"
+        translucent
+        barStyle={'dark-content'}
+      />
       {children}
     </SafeAreaProvider>
   );

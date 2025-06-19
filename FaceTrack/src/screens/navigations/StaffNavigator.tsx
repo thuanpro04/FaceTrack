@@ -10,6 +10,7 @@ import AttendanceHistoryScreen from '../Staff/attendancehistory/AttendanceHistor
 import AwaitingModerationScreen from '../Staff/awaitingmoderation/AwaitingModerationScreen';
 import ManageListScreen from '../Staff/managelist/ManageListScreen';
 import StatiticsScreen from '../Staff/statitics/StatiticsScreen';
+import ExpandScreen from '../Staff/Expand/ExpandScreen';
 const Stack = createNativeStackNavigator();
 const StaffNavigator = () => {
   return (
@@ -25,6 +26,8 @@ const StaffNavigator = () => {
       <Stack.Screen name="awaiting" component={AwaitingModerationScreen} />
       <Stack.Screen name="manage-list" component={ManageListScreen} />
       <Stack.Screen name="statitics" component={StatiticsScreen} />
+      <Stack.Screen name="expand" component={ExpandScreen} />
+
       
     </Stack.Navigator>
   );
