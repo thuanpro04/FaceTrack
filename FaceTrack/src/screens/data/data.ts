@@ -70,8 +70,8 @@ export const menu: MenuItem[] = [
   },
   {
     id: 4,
-    title: 'Quản lý danh sách',
-    description: 'Quản lý nhân viên & dữ liệu',
+    title: 'Danh sách',
+    description: 'Các quản lý & dữ liệu',
     icon: Staff,
     screen: 'manage-list',
     category: 'management',

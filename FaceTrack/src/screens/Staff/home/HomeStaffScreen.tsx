@@ -1,5 +1,13 @@
 import React, {useEffect, useState} from 'react';
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {useSelector} from 'react-redux';
 
 import Geolocation from '@react-native-community/geolocation';
@@ -23,6 +31,7 @@ import CardComponent from '../../../components/layout/CardComponent';
 import PlanBannerModal from '../../modals/PlanBannerModal';
 import LoadingModal from '../../modals/LoadingModal';
 import EnhancedCardComponent from '../Expand/Component/EnhancedCardComponent';
+import ButtonAnimation from '../../../components/layout/ButtonAnimation';
 
 type Place = {
   title: string;
@@ -33,6 +42,35 @@ type Place = {
     lng: number;
   };
 };
+const scannedHistory = [
+  {
+    id: 'scan001',
+    userId: 'user123',
+    name: 'Nguyễn Văn A',
+    department: 'Phòng Kỹ thuật',
+    qrCode: 'QRA123456',
+    scannedAt: '2025-05-18T08:45:00Z',
+    status: 'Hợp lệ',
+  },
+  {
+    id: 'scan002',
+    userId: 'user456',
+    name: 'Trần Thị B',
+    department: 'Phòng Kế toán',
+    qrCode: 'QRA654321',
+    scannedAt: '2025-05-18T07:20:00Z',
+    status: 'Hết hạn',
+  },
+  {
+    id: 'scan003',
+    userId: 'user123',
+    name: 'Nguyễn Văn A',
+    department: 'Phòng Kỹ thuật',
+    qrCode: 'QRA999888',
+    scannedAt: '2025-05-17T16:00:00Z',
+    status: 'Hợp lệ',
+  },
+];
 const HomeStaffScreen = ({navigation}: any) => {
   const [isVisible, setVisible] = useState(false);
   const [currentAddress, setCurrentAddress] = useState<Place>({
@@ -41,6 +79,7 @@ const HomeStaffScreen = ({navigation}: any) => {
     position: {lat: 0, lng: 0},
     title: '',
   });
+  const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const [isLoading, setIsLoading] = useState(false);
   const [hasPermissionLocal, setHasPermissionLocal] = useState<boolean>(false);
   const user = useSelector(authSelector);
@@ -48,6 +87,22 @@ const HomeStaffScreen = ({navigation}: any) => {
   const filterMenu = menu.filter(item => item.isNew);
   const firstRow = filterMenu.slice(0, Math.ceil(filterMenu.length / 2));
   const secondRow = filterMenu.slice(Math.ceil(filterMenu.length / 2));
+  const getItemsPerRow = () => {
+    const screenWidth = screenData.width;
+    const isLandscape = screenData.width > screenData.height;
+    if (isLandscape) {
+      if (screenWidth > 900) return 5;
+      if (screenWidth > 700) return 4;
+      return 3;
+    } else {
+      return 2;
+    }
+  };
+  const itemsPerRow = getItemsPerRow();
+  const rows = [];
+  for (let i = 0; i < filterMenu.length; i += itemsPerRow) {
+    rows.push(filterMenu.slice(i, i + itemsPerRow));
+  }
   const onCloseModal = () => {
     setVisible(false);
   };
@@ -116,6 +171,12 @@ const HomeStaffScreen = ({navigation}: any) => {
     navigation.navigate(`${name}`);
   };
   useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({window}) => {
+      setScreenData(window);
+    });
+    return () => subscription?.remove();
+  }, []);
+  useEffect(() => {
     const init = async () => {
       const granted = await showNotificating.requestLocationPermission();
       if (granted) {
@@ -126,12 +187,12 @@ const HomeStaffScreen = ({navigation}: any) => {
 
     init();
   }, []);
-
+  const isLandscape = screenData.width > screenData.height;
   const HeaderHome = () => {
     return (
       <RowComponent styles={{marginVertical: 12, paddingHorizontal: 16}}>
         <RowComponent styles={{flex: 1, gap: 12}}>
-          <TouchableOpacity onPress={onChangeMenuModal} style={{}}>
+          <ButtonAnimation onPress={onChangeMenuModal}>
             {user.profileImageUrl ? (
               <Image
                 source={{
@@ -144,7 +205,7 @@ const HomeStaffScreen = ({navigation}: any) => {
                 <TextComponent label={user.fullName.slice(0, 1)[0]} />
               </View>
             )}
-          </TouchableOpacity>
+          </ButtonAnimation>
           <View>
             <TextComponent
               label={`${user.fullName}`}
@@ -164,11 +225,13 @@ const HomeStaffScreen = ({navigation}: any) => {
             alignItems: 'center',
             borderRadius: 8,
           }}>
-          <Ionicons
-            name="notifications-outline"
-            size={appSize.iconLarge}
-            style={{padding: 6}}
-          />
+          <ButtonAnimation onPress={() => console.log('hello')}>
+            <Ionicons
+              name="notifications-outline"
+              size={appSize.iconLarge}
+              style={{padding: 6}}
+            />
+          </ButtonAnimation>
           <View
             style={{
               height: 8,
@@ -190,35 +253,6 @@ const HomeStaffScreen = ({navigation}: any) => {
     );
   };
 
-  const scannedHistory = [
-    {
-      id: 'scan001',
-      userId: 'user123',
-      name: 'Nguyễn Văn A',
-      department: 'Phòng Kỹ thuật',
-      qrCode: 'QRA123456',
-      scannedAt: '2025-05-18T08:45:00Z',
-      status: 'Hợp lệ',
-    },
-    {
-      id: 'scan002',
-      userId: 'user456',
-      name: 'Trần Thị B',
-      department: 'Phòng Kế toán',
-      qrCode: 'QRA654321',
-      scannedAt: '2025-05-18T07:20:00Z',
-      status: 'Hết hạn',
-    },
-    {
-      id: 'scan003',
-      userId: 'user123',
-      name: 'Nguyễn Văn A',
-      department: 'Phòng Kỹ thuật',
-      qrCode: 'QRA999888',
-      scannedAt: '2025-05-17T16:00:00Z',
-      status: 'Hợp lệ',
-    },
-  ];
   const handleSearch = () => {};
   return (
     <ContainerComponent>
@@ -261,14 +295,9 @@ const HomeStaffScreen = ({navigation}: any) => {
         <View style={{marginVertical: 18}}>
           <RowComponent styles={{paddingHorizontal: 12}}>
             <TextComponent label="Chức năng" styles={styles.title} />
-            <TouchableOpacity
+            <ButtonAnimation
               onPress={() => navigation.navigate('expand')}
-              style={{
-                paddingHorizontal: 12,
-                borderRadius: 12,
-                borderWidth: 0.3,
-                justifyContent: 'center',
-              }}>
+              styles={styles.btnExpand}>
               <TextComponent
                 label="Xem thêm"
                 styles={{
@@ -277,32 +306,39 @@ const HomeStaffScreen = ({navigation}: any) => {
                   fontSize: 12,
                 }}
               />
-            </TouchableOpacity>
+            </ButtonAnimation>
           </RowComponent>
-          <RowComponent styles={styles.row}>
-            {firstRow.map((item, index) => {
-              return (
-                <EnhancedCardComponent
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  onPress={() => onNavigation(item.screen)}
-                />
-              );
-            })}
-          </RowComponent>
-          <RowComponent styles={styles.row}>
-            {secondRow.map((item, index) => {
-              return (
-                <EnhancedCardComponent
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  onPress={() => onNavigation(item.screen)}
-                />
-              );
-            })}
-          </RowComponent>
+          {rows.map((row, rowIndex) => (
+            <RowComponent
+              key={rowIndex}
+              styles={[styles.row, isLandscape && styles.rowLandscape]}>
+              {row.map((item, index) => {
+                return (
+                  <View
+                    key={item.id}
+                    style={[
+                      {width: `${100 / itemsPerRow - 2}%`}, // Responsive width
+                    ]}>
+                    <EnhancedCardComponent
+                      item={item}
+                      index={index}
+                      onPress={() => onNavigation(item.screen)}
+                    />
+                  </View>
+                );
+              })}
+              {/* Thêm placeholder views nếu hàng không đủ items */}
+              {row.length < itemsPerRow &&
+                Array.from({length: itemsPerRow - row.length}).map(
+                  (_, emptyIndex) => (
+                    <View
+                      key={`empty-${rowIndex}-${emptyIndex}`}
+                      style={{width: `${100 / itemsPerRow - 2}%`}}
+                    />
+                  ),
+                )}
+            </RowComponent>
+          ))}
           <SpaceComponent height={8} />
           <TextComponent label="📌 Quét gần nhất" styles={styles.title} />
           <SpaceComponent height={18} />
@@ -430,4 +466,15 @@ const styles = StyleSheet.create({
     padding: 12,
     justifyContent: 'space-between',
   },
+  btnExpand: {
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 0.3,
+    justifyContent: 'center',
+  },
+  rowLandscape: {
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  
 });

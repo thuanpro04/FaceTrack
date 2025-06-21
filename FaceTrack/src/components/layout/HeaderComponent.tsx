@@ -8,7 +8,7 @@ import TextComponent from './TextComponent';
 interface Props {
   label?: string;
   icon?: ReactNode;
-  navigation: any;
+  navigation?: any;
   labelRight?: string;
 }
 const HeaderComponent = (props: Props) => {
