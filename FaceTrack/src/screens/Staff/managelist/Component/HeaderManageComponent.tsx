@@ -1,4 +1,4 @@
-import {Animated, StyleSheet, Text, View} from 'react-native';
+import {Animated, Dimensions, StyleSheet, Text, View} from 'react-native';
 import React, {useEffect, useRef} from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 import ButtonAnimation from '../../../../components/layout/ButtonAnimation';
@@ -10,11 +10,13 @@ import {
 } from '../../../../components/layout';
 import {appSize} from '../../../../constants/appSize';
 import appColors from '../../../../constants/appColors';
-import {Manager} from '../../../data/type';
+import {Manager} from '../../../data/user.type';
 interface Props {
   navigation: any;
   managers: Manager[];
 }
+const {width, height} = Dimensions.get('window');
+
 const HeaderManageComponent = (props: Props) => {
   const {navigation, managers} = props;
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -39,6 +41,7 @@ const HeaderManageComponent = (props: Props) => {
               }),
             },
           ],
+          maxHeight:'20%',
         },
       ]}>
       <LinearGradient

@@ -11,6 +11,8 @@ import AwaitingModerationScreen from '../Staff/awaitingmoderation/AwaitingModera
 import ManageListScreen from '../Staff/managelist/ManageListScreen';
 import StatiticsScreen from '../Staff/statitics/StatiticsScreen';
 import ExpandScreen from '../Staff/Expand/ExpandScreen';
+import NotificationScreen from '../Staff/notification/NotificationScreen';
+import Dashboard from '../Staff/dashboard/Dashboard';
 const Stack = createNativeStackNavigator();
 const StaffNavigator = () => {
   return (
@@ -25,8 +27,11 @@ const StaffNavigator = () => {
       <Stack.Screen name="attendance-history" component={AttendanceHistoryScreen} />
       <Stack.Screen name="awaiting" component={AwaitingModerationScreen} />
       <Stack.Screen name="manage-list" component={ManageListScreen} />
-      <Stack.Screen name="statitics" component={StatiticsScreen} />
+      <Stack.Screen name="statistics" component={StatiticsScreen} />
       <Stack.Screen name="expand" component={ExpandScreen} />
+      <Stack.Screen name="notifi" component={NotificationScreen} />
+      <Stack.Screen name="dashboard" component={Dashboard} />
+
 
       
     </Stack.Navigator>

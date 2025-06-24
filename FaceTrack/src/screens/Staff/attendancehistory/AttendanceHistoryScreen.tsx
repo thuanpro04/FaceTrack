@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, Text, FlatList, StyleSheet} from 'react-native';
+import React, {useRef, useState} from 'react';
+import {View, Text, FlatList, StyleSheet, Animated} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {ContainerComponent, TextComponent} from '../../../components/layout';
 import HeaderComponent from '../../../components/layout/HeaderComponent';
@@ -63,10 +63,83 @@ const statusConfig = {
 };
 
 const AttendanceHistoryScreen = ({navigation}: any) => {
-  const renderItem = ({item}: {item: AttendanceHistoryItem}) => {
+  const [refreshing, setRefreshing] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const translateXAnim = useRef(new Animated.Value(0)).current;
+  const cardAnimations = useRef(
+    attendanceHistoryData.map(() => new Animated.Value(0)),
+  ).current;
+  const cardStagger = cardAnimations.map((anim, index) =>
+    Animated.timing(anim, {
+      toValue: 1,
+      duration: 500,
+      delay: index * 100 + 400,
+      useNativeDriver: true,
+    }),
+  );
+  Animated.stagger(100, cardStagger).start();
+  const rotate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '2deg'],
+  });
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 0.98,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      cardAnimations.forEach((anim, index) => {
+        anim.setValue(0);
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 300,
+          delay: index * 50,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 1000);
+  };
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: AttendanceHistoryItem;
+    index: number;
+  }) => {
     const status = statusConfig[item.status];
     return (
-      <View style={styles.card}>
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            transform: [
+              {
+                translateY: cardAnimations[index].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [50, 0],
+                }),
+              },
+              {
+                scale: scaleAnim,
+              },
+              {rotate},
+              {translateX: translateXAnim},
+            ],
+          },
+        ]}>
         <View style={styles.row}>
           <Icon
             name={status.icon}
@@ -117,24 +190,21 @@ const AttendanceHistoryScreen = ({navigation}: any) => {
             <TextComponent styles={styles.noteText} label={item.note} />
           </View>
         ) : null}
-      </View>
+      </Animated.View>
     );
   };
 
   return (
     <ContainerComponent styles={styles.container}>
       <HeaderComponent
-        icon={
-          <ButtonAnimation onPress={() => navigation.goBack()}>
-            <ArrowLeft2
-              size={appSize.iconMedium}
-              color={appColors.iconDefault}
-            />
-          </ButtonAnimation>
-        }
+        onNavigationIcon={() => navigation.goBack()}
+        label="Lịch sử điểm danh"
+        textStyle={styles.textHeader}
       />
-      <TextComponent styles={styles.header} label="Lịch sử điểm danh" />
+
       <FlatList
+        onRefresh={onRefresh}
+        refreshing={refreshing}
         data={attendanceHistoryData}
         renderItem={renderItem}
         keyExtractor={item => item.id}
@@ -150,12 +220,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 16,
   },
-  header: {
+  textHeader: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#222',
-    marginBottom: 16,
-    textAlign: 'center',
   },
   card: {
     backgroundColor: '#fff',

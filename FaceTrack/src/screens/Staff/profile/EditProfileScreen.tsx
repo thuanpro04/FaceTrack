@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Dimensions,
   Image,
@@ -9,6 +9,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Animated,
+  Easing,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -18,15 +20,18 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import {useSelector} from 'react-redux';
 import {ImageOrVideo} from 'react-native-image-crop-picker';
-import { authSelector } from '../../../redux/slices/authSlice';
+import {authSelector} from '../../../redux/slices/authSlice';
 import axiosInstance from '../../../api/axiosInstance';
-import { API_PATHS } from '../../../api/apiPaths';
+import {API_PATHS} from '../../../api/apiPaths';
 import appColors from '../../../constants/appColors';
-import { appSize } from '../../../constants/appSize';
-import { ContainerComponent, TextComponent } from '../../../components/layout';
+import {appSize} from '../../../constants/appSize';
+import {ContainerComponent, TextComponent} from '../../../components/layout';
 import ButtonImagePicker from '../../../components/layout/ButtonImagePicker';
+import ButtonAnimation from '../../../components/layout/ButtonAnimation';
+import {ArrowLeft2} from 'iconsax-react-native';
 
 const {width} = Dimensions.get('window');
+
 interface info {
   profileImageUrl?: string;
   fullName: string;
@@ -36,6 +41,7 @@ interface info {
   gender: 'nam' | 'nữ' | 'khác';
   dob: Date | null;
 }
+
 const EditProfileScreen = ({navigation}: any) => {
   const [focusedInput, setFocusedInput] = useState('');
   const [user, setUser] = useState<info>({
@@ -48,15 +54,100 @@ const EditProfileScreen = ({navigation}: any) => {
     profileImageUrl: '',
   });
   const profile = useSelector(authSelector);
-
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
+  // Animation values
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(50));
+  const [avatarScale] = useState(new Animated.Value(0.8));
+  const [buttonPulse] = useState(new Animated.Value(1));
+  const [formAnimations] = useState([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]);
+
+  useEffect(() => {
+    // Entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.back(1.2)),
+      }),
+      Animated.spring(avatarScale, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Staggered form animations
+    const formAnimationSequence = formAnimations.map((anim, index) =>
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 600,
+        delay: index * 100,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
+      }),
+    );
+
+    Animated.stagger(100, formAnimationSequence).start();
+
+    // Pulse animation for save button
+    const pulseAnimation = () => {
+      Animated.sequence([
+        Animated.timing(buttonPulse, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(buttonPulse, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]).start(() => pulseAnimation());
+    };
+
+    setTimeout(pulseAnimation, 2000);
+  }, []);
+
   const onChangeUserInfo = (key: string, value: string) => {
     setUser(prev => ({...prev, [key]: value}));
   };
+
   const handleSaveProfile = () => {
+    // Button press animation
+    Animated.sequence([
+      Animated.timing(buttonPulse, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonPulse, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     // Xử lý lưu thông tin profile
     console.log('Saving profile...', user);
   };
+
   const showDatePicker = () => {
     setDatePickerVisibility(true);
     setFocusedInput('dob');
@@ -77,6 +168,7 @@ const EditProfileScreen = ({navigation}: any) => {
     console.log('Date picker cancelled');
     hideDatePicker();
   };
+
   const handleImageUrl = async (value: ImageOrVideo) => {
     console.log(value, 122);
     const formData = new FormData();
@@ -103,13 +195,63 @@ const EditProfileScreen = ({navigation}: any) => {
       console.log('error: ', error);
     }
   };
-  const facePhotos = [
-    'front_face.jpg', // Ảnh nhìn thẳng (bắt buộc)
-    'slight_left.jpg', // Nghiêng trái 15°
-    'slight_right.jpg', // Nghiêng phải 15°
-    'with_smile.jpg', // Có nụ cười
-    'serious_face.jpg', // Biểu cảm nghiêm túc
-  ];
+
+  const renderAnimatedInput = (
+    placeholder: string,
+    value: string,
+    onChangeText: (text: string) => void,
+    iconName: string,
+    keyboardType: any = 'default',
+    fieldKey: string,
+    animationIndex: number,
+  ) => {
+    return (
+      <Animated.View
+        style={[
+          styles.inputContainer,
+          {
+            opacity: formAnimations[animationIndex],
+            transform: [
+              {
+                translateY: formAnimations[animationIndex].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [30, 0],
+                }),
+              },
+            ],
+          },
+        ]}>
+        <Animated.View
+          style={[
+            styles.inputWrapper,
+            focusedInput === fieldKey && styles.inputWrapperFocused,
+            {
+              transform: [
+                {
+                  scale: focusedInput === fieldKey ? 1.02 : 1,
+                },
+              ],
+            },
+          ]}>
+          <Icon
+            name={iconName}
+            size={20}
+            color={focusedInput === fieldKey ? '#667eea' : '#9ca3af'}
+          />
+          <TextInput
+            style={styles.input}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor="#9ca3af"
+            keyboardType={keyboardType}
+            onFocus={() => setFocusedInput(fieldKey)}
+            onBlur={() => setFocusedInput('')}
+          />
+        </Animated.View>
+      </Animated.View>
+    );
+  };
 
   return (
     <KeyboardAvoidingView
@@ -117,28 +259,43 @@ const EditProfileScreen = ({navigation}: any) => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ContainerComponent isScroll>
-        {/* Header Gradient */}
-        <LinearGradient
-          colors={['#2C698D', '#00C897']}
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 1}}
-          style={styles.headerGradient}>
-          <AntDesign
-            name="arrowleft"
-            color={appColors.white}
-            size={appSize.iconMedium}
-            onPress={() => navigation.goBack()}
-          />
-          <TextComponent label="Chỉnh sửa hồ sơ" styles={styles.headerTitle} />
-          <TextComponent
-            label="Cập nhật thông tin cá nhân của bạn"
-            styles={styles.headerSubtitle}
-          />
-        </LinearGradient>
+        {/* Header Gradient with Animation */}
+        <Animated.View
+          style={[
+            {
+              opacity: fadeAnim,
+              transform: [{translateY: slideAnim}],
+            },
+          ]}>
+          <LinearGradient
+            colors={['#2C698D', '#00C897']}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 1}}
+            style={styles.headerGradient}>
+            <ButtonAnimation onPress={() => navigation.goBack()}>
+              <ArrowLeft2 color={appColors.white} size={appSize.iconLarge} />
+            </ButtonAnimation>
+            <TextComponent
+              label="Chỉnh sửa hồ sơ"
+              styles={styles.headerTitle}
+            />
+            <TextComponent
+              label="Cập nhật thông tin cá nhân của bạn"
+              styles={styles.headerSubtitle}
+            />
+          </LinearGradient>
+        </Animated.View>
 
         <ContainerComponent>
-          {/* Avatar Section */}
-          <View style={styles.avatarSection}>
+          {/* Avatar Section with Animation */}
+          <Animated.View
+            style={[
+              styles.avatarSection,
+              {
+                opacity: fadeAnim,
+                transform: [{scale: avatarScale}],
+              },
+            ]}>
             <View style={styles.avatarContainer}>
               {user.profileImageUrl ? (
                 <Image
@@ -179,112 +336,87 @@ const EditProfileScreen = ({navigation}: any) => {
                 />
               </LinearGradient>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
 
-          {/* Form Container */}
+          {/* Form Container with Animations */}
           <View style={styles.formContainer}>
-            <TextComponent
-              label="Thông tin cá nhân"
-              styles={styles.sectionTitle}
-            />
+            <Animated.View
+              style={[
+                {
+                  opacity: formAnimations[0],
+                  transform: [
+                    {
+                      translateY: formAnimations[0].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}>
+              <TextComponent
+                label="Thông tin cá nhân"
+                styles={styles.sectionTitle}
+              />
+            </Animated.View>
 
-            {/* Full Name Input */}
-            <View style={styles.inputContainer}>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  focusedInput === 'fullName' && styles.inputWrapperFocused,
-                ]}>
-                <Icon
-                  name="person"
-                  size={20}
-                  color={focusedInput === 'fullName' ? '#667eea' : '#9ca3af'}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={user.fullName}
-                  onChangeText={text => onChangeUserInfo('fullName', text)}
-                  placeholder="Họ và tên"
-                  placeholderTextColor="#9ca3af"
-                  onFocus={() => setFocusedInput('fullName')}
-                  onBlur={() => setFocusedInput('')}
-                />
-              </View>
-            </View>
+            {/* Animated Form Inputs */}
+            {renderAnimatedInput(
+              'Họ và tên',
+              user.fullName,
+              text => onChangeUserInfo('fullName', text),
+              'person',
+              'default',
+              'fullName',
+              1,
+            )}
 
-            {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  focusedInput === 'email' && styles.inputWrapperFocused,
-                ]}>
-                <Icon
-                  name="email"
-                  size={20}
-                  color={focusedInput === 'email' ? '#667eea' : '#9ca3af'}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={user.email}
-                  onChangeText={text => onChangeUserInfo('email', text)}
-                  placeholder="Email"
-                  placeholderTextColor="#9ca3af"
-                  keyboardType="email-address"
-                  onFocus={() => setFocusedInput('email')}
-                  onBlur={() => setFocusedInput('')}
-                />
-              </View>
-            </View>
+            {renderAnimatedInput(
+              'Email',
+              user.email,
+              text => onChangeUserInfo('email', text),
+              'email',
+              'email-address',
+              'email',
+              2,
+            )}
 
-            {/* Phone Input */}
-            <View style={styles.inputContainer}>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  focusedInput === 'phone' && styles.inputWrapperFocused,
-                ]}>
-                <Icon
-                  name="phone"
-                  size={20}
-                  color={focusedInput === 'phone' ? '#667eea' : '#9ca3af'}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={user.phone}
-                  onChangeText={text => onChangeUserInfo('phone', text)}
-                  placeholder="Số điện thoại"
-                  placeholderTextColor="#9ca3af"
-                  keyboardType="phone-pad"
-                  onFocus={() => setFocusedInput('phone')}
-                  onBlur={() => setFocusedInput('')}
-                />
-              </View>
-            </View>
-            {/* Address Input */}
-            <View style={styles.inputContainer}>
-              <View
-                style={[
-                  styles.inputWrapper,
-                  focusedInput === 'address' && styles.inputWrapperFocused,
-                ]}>
-                <Icon
-                  name="location-on"
-                  size={20}
-                  color={focusedInput === 'address' ? '#667eea' : '#9ca3af'}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={user.address}
-                  onChangeText={text => onChangeUserInfo('address', text)}
-                  placeholder="Địa chỉ"
-                  placeholderTextColor="#9ca3af"
-                  onFocus={() => setFocusedInput('address')}
-                  onBlur={() => setFocusedInput('')}
-                />
-              </View>
-            </View>
-            <View style={styles.inputContainer}>
+            {renderAnimatedInput(
+              'Số điện thoại',
+              user.phone,
+              text => onChangeUserInfo('phone', text),
+              'phone',
+              'phone-pad',
+              'phone',
+              3,
+            )}
+
+            {renderAnimatedInput(
+              'Địa chỉ',
+              user.address,
+              text => onChangeUserInfo('address', text),
+              'location-on',
+              'default',
+              'address',
+              4,
+            )}
+
+            {/* Date Picker with Animation */}
+            <Animated.View
+              style={[
+                styles.inputContainer,
+                {
+                  opacity: formAnimations[5],
+                  transform: [
+                    {
+                      translateY: formAnimations[5].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}>
               <TouchableOpacity
                 style={[
                   styles.inputWrapper,
@@ -343,12 +475,27 @@ const EditProfileScreen = ({navigation}: any) => {
                   padding: 20,
                 }}
               />
-            </View>
-            {/* Gender Selection */}
-            <View style={styles.genderSection}>
+            </Animated.View>
+
+            {/* Gender Selection with Animation */}
+            <Animated.View
+              style={[
+                styles.genderSection,
+                {
+                  opacity: formAnimations[5],
+                  transform: [
+                    {
+                      translateY: formAnimations[5].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}>
               <TextComponent label="Giới tính" styles={styles.genderLabel} />
               <View style={styles.genderContainer}>
-                {['Nam', 'Nữ', 'Khác'].map(option => (
+                {['Nam', 'Nữ', 'Khác'].map((option, index) => (
                   <TouchableOpacity
                     key={option}
                     style={[
@@ -375,11 +522,26 @@ const EditProfileScreen = ({navigation}: any) => {
                   </TouchableOpacity>
                 ))}
               </View>
-            </View>
+            </Animated.View>
           </View>
 
-          {/* Save Button */}
-          <View style={styles.saveButtonContainer}>
+          {/* Animated Save Button */}
+          <Animated.View
+            style={[
+              styles.saveButtonContainer,
+              {
+                opacity: fadeAnim,
+                transform: [
+                  {scale: buttonPulse},
+                  {
+                    translateY: fadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [50, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}>
             <TouchableOpacity
               style={styles.saveButton}
               onPress={handleSaveProfile}
@@ -401,7 +563,7 @@ const EditProfileScreen = ({navigation}: any) => {
                 />
               </LinearGradient>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </ContainerComponent>
       </ContainerComponent>
     </KeyboardAvoidingView>
@@ -451,7 +613,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 0.5,
   },
-
   faceSetupButton: {
     borderRadius: 25,
     elevation: 4,

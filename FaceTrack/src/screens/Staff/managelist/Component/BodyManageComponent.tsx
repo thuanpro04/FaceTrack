@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import React, {useRef, useState} from 'react';
-import {Manager} from '../../../data/type';
+import {Manager} from '../../../data/user.type';
 import {Animated} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {TextComponent} from '../../../../components/layout';
@@ -20,7 +20,6 @@ const BodyManageComponent = (props: Props) => {
   const {managers, searchText, selectedFilter} = props;
   const [refreshing, setRefreshing] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const floatingAnim = useRef(new Animated.Value(0)).current;
   const cardAnimations = useRef(
     managers.map(() => new Animated.Value(0)),
   ).current;
@@ -117,20 +116,20 @@ const BodyManageComponent = (props: Props) => {
         }),
       ]).start();
     };
-     const handlePressOut = () => {
-          Animated.parallel([
-            Animated.timing(scaleAnim, {
-              toValue: 1,
-              duration: 150,
-              useNativeDriver: true,
-            }),
-            Animated.timing(rotateAnim, {
-              toValue: 0,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-          ]).start();
-        };
+    const handlePressOut = () => {
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotateAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    };
     return (
       <Animated.View
         style={[

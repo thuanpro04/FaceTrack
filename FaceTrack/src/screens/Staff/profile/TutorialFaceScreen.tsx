@@ -4,10 +4,15 @@ import React, {useEffect} from 'react';
 import Entypo from 'react-native-vector-icons/Entypo';
 
 import {useCameraPermission} from 'react-native-vision-camera';
-import { ContainerComponent, RowComponent, SpaceComponent, TextComponent } from '../../../components/layout';
+import {
+  ContainerComponent,
+  RowComponent,
+  SpaceComponent,
+  TextComponent,
+} from '../../../components/layout';
 import HeaderComponent from '../../../components/layout/HeaderComponent';
 import appColors from '../../../constants/appColors';
-import { appSize } from '../../../constants/appSize';
+import {appSize} from '../../../constants/appSize';
 
 const tutorio = [
   {
@@ -49,7 +54,8 @@ const TutorialFaceScreen = ({navigation}: any) => {
     <ContainerComponent styles={styles.container}>
       <ContainerComponent isScroll>
         <HeaderComponent
-          navigation={hasPermission && navigation}
+          onNavigationLabelRight={() => navigation.navigate('setup-face')}
+          onNavigationIcon={() => hasPermission && navigation.goBack()}
           labelRight="next"
         />
         <View style={styles.instructionsContainer}>

@@ -202,7 +202,7 @@ const HomeStaffScreen = ({navigation}: any) => {
               />
             ) : (
               <View style={styles.img}>
-                <TextComponent label={user.fullName.slice(0, 1)[0]} />
+                <TextComponent label={user.fullName.slice(0, 1)} />
               </View>
             )}
           </ButtonAnimation>
@@ -229,7 +229,6 @@ const HomeStaffScreen = ({navigation}: any) => {
             <Ionicons
               name="notifications-outline"
               size={appSize.iconLarge}
-              style={{padding: 6}}
             />
           </ButtonAnimation>
           <View

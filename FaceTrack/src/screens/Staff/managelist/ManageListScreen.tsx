@@ -21,9 +21,10 @@ import {ArrowLeft2} from 'iconsax-react-native';
 import {appSize} from '../../../constants/appSize';
 import appColors from '../../../constants/appColors';
 import HeaderManageComponent from './Component/HeaderManageComponent';
-import {Manager} from '../../data/type';
+import {Manager} from '../../data/user.type';
 import FilterButton from './Component/FilterButton';
 import BodyManageComponent from './Component/BodyManageComponent';
+import FootComponent from './Component/FootComponent';
 const sampleManagers: Manager[] = [
   {
     id: '1',
@@ -72,6 +73,7 @@ const ManageListScreen = ({navigation}: any) => {
   const [managers, setManagers] = useState<Manager[]>(sampleManagers);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const searchAnim = useRef(new Animated.Value(0)).current;
+  const isLandscape = width > height;
 
   useEffect(() => {
     Animated.timing(searchAnim, {
@@ -151,7 +153,7 @@ const ManageListScreen = ({navigation}: any) => {
         searchText={searchText}
         selectedFilter={selectedFilter}
       />
-      
+      <FootComponent />
     </ContainerComponent>
   );
 };

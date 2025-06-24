@@ -179,17 +179,8 @@ const ExpandScreen = ({navigation}: any) => {
           styles.headerGradient,
           responsiveConfig.isLandscape && styles.headerGradientLandscape,
         ]}>
-        <HeaderComponent
-          navigation={navigation}
-          icon={
-            <ArrowLeft2
-              size={appSize.iconLarge}
-              color={appColors.iconDefault}
-              onPress={() => navigation.goBack()}
-            />
-          }
-        />
-        <View >
+        <HeaderComponent onNavigationIcon={() => navigation.goBack()} />
+        <View>
           <View style={styles.titleRow}>
             <Category
               size={responsiveConfig.isTablet ? 32 : 28}
