@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://192.168.1.139:2403';
+export const BASE_URL = 'https://face-track-two.vercel.app';
 export const API_PATHS = {
   AUTH: {
     LOGIN: '/api/v1/auth/login',

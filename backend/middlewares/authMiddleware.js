@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const multer = require("multer");
+const connectDb = require("../config/mongodb");
+const { scheduleCleanupOldFiles } = require("../controllers/FaceController");
 exports.protect = async (req, res, next) => {
   let accessToken = req.headers.authorization?.split(" ")[1];
   if (!accessToken) {
@@ -18,4 +20,5 @@ exports.protect = async (req, res, next) => {
     });
   }
 };
+
 
