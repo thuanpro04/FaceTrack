@@ -44,6 +44,28 @@ app.use(async (req, res, next) => {
 // connectDb();
 // // dọn file rac
 // scheduleCleanupOldFiles();
+app.get("/debug-env", (req, res) => {
+  const allEnvKeys = Object.keys(process.env);
+  const mongoKeys = allEnvKeys.filter(key => 
+    key.toLowerCase().includes('mongo') || 
+    key.toLowerCase().includes('db') ||
+    key.toLowerCase().includes('uri')
+  );
+  
+  res.json({
+    totalEnvVars: allEnvKeys.length,
+    mongoRelatedKeys: mongoKeys,
+    hasMongoUrl: !!process.env.MONGODB_URL,
+    hasMongoUri: !!process.env.MONGODB_URI,
+    hasDatabaseUrl: !!process.env.DATABASE_URL,
+    nodeEnv: process.env.NODE_ENV,
+    vercelEnv: process.env.VERCEL_ENV,
+    // Hiển thị 5 ký tự đầu của URI nếu có
+    mongoPreview: process.env.MONGODB_URI ? 
+      process.env.MONGODB_URI.substring(0, 20) + "..." : 
+      (process.env.MONGODB_URL ? process.env.MONGODB_URL.substring(0, 20) + "..." : "not found")
+  });
+});
 app.get("/", (req, res) => {
   res.send("Welcome to FaceTrack API");
 });
