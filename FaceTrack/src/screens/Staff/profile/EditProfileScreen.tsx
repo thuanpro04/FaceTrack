@@ -29,6 +29,7 @@ import {ContainerComponent, TextComponent} from '../../../components/layout';
 import ButtonImagePicker from '../../../components/layout/ButtonImagePicker';
 import ButtonAnimation from '../../../components/layout/ButtonAnimation';
 import {ArrowLeft2} from 'iconsax-react-native';
+import axios from 'axios';
 
 const {width} = Dimensions.get('window');
 
@@ -41,7 +42,8 @@ interface info {
   gender: 'nam' | 'nữ' | 'khác';
   dob: Date | null;
 }
-
+const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET; // tạo ở bước 3
+const CLOUD_NAME = process.env.CLOUD_NAME; // lấy ở dashboard
 const EditProfileScreen = ({navigation}: any) => {
   const [focusedInput, setFocusedInput] = useState('');
   const [user, setUser] = useState<info>({
@@ -170,27 +172,39 @@ const EditProfileScreen = ({navigation}: any) => {
   };
 
   const handleImageUrl = async (value: ImageOrVideo) => {
-    console.log(value, 122);
     const formData = new FormData();
-    formData.append('image', {
+    formData.append('file', {
       uri: value.path,
       type: value.mime,
       name: value.filename || 'photo.jpg',
     });
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('cloud_name', CLOUD_NAME);
+    console.log('Form Data: ', formData);
+
     try {
-      const response = await axiosInstance.post(
-        API_PATHS.IMAGE.UPLOAD_AVATAR,
+      const res = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
         formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
       );
-      if (response?.data) {
-        console.log('Res: ', response?.data);
-        onChangeUserInfo('profileImageUrl', response.data.profileImageUrl);
+      if (res && res.data) {
+        console.log('Data: ', res.data);
+        console.log('Avatar: ', res.data.secure_url);
+        onChangeUserInfo('profileImageUrl', res.data.secure_url);
       }
+      // const response = await axiosInstance.post(
+      //   API_PATHS.IMAGE.UPLOAD_AVATAR,
+      //   formData,
+      //   {
+      //     headers: {
+      //       'Content-Type': 'multipart/form-data',
+      //     },
+      //   },
+      // );
+      // if (response?.data) {
+      //   console.log('Res: ', response?.data);
+      //   onChangeUserInfo('profileImageUrl', response.data.profileImageUrl);
+      // }
     } catch (error) {
       console.log('error: ', error);
     }
