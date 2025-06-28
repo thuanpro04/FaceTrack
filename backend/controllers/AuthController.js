@@ -106,10 +106,9 @@ exports.loginUser = async (req, res) => {
     });
     console.log("Login user thành công");
   } catch (error) {
-    console.error("Register Error:", error);
-
+    console.error("Login Error:", error);
     res.status(500).json({
-      message: "Error register user",
+      message: "Error Login user",
       error: error instanceof Error ? error.message : String(error),
     });
   }
