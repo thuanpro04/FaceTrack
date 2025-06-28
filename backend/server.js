@@ -25,9 +25,23 @@ app.get("/", (req, res) => {
 app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/face", faceRouter);
-connectDb();
+let isConnected = false;
+app.use(async (req, res, next) => {
+  try {
+    if (!isConnected) {
+      await connectDb();
+      scheduleCleanupOldFiles();
+      isConnected = true;
+    }
+    next();
+  } catch (error) {
+    console.error("Error connecting to the database:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+// connectDb();
 //dọn file rac
-scheduleCleanupOldFiles();
+// scheduleCleanupOldFiles();
 // app.listen(port, () => {
 //   console.log(`Server is running on port ${port}`);
 // });
