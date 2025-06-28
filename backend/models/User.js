@@ -9,6 +9,11 @@ const UserSchema = new mongoose.Schema(
     phone: { type: Number, default: null },
     profileImageUrl: { type: String, default: null },
     lockUntil: { type: Date },
+    role: {
+      type: String,
+      enum: ["staff", "manage", "admin"],
+      default: "staff",
+    },
     failedLoginAttempts: { type: Number, default: 0 },
     status: {
       type: String,

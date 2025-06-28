@@ -179,32 +179,24 @@ const EditProfileScreen = ({navigation}: any) => {
       name: value.filename || 'photo.jpg',
     });
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    formData.append('cloud_name', CLOUD_NAME);
+    
     console.log('Form Data: ', formData);
 
     try {
       const res = await axios.post(
         `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
         formData,
+        {
+          headers:{
+            'Content-Type':'multipart/form-data',
+          }
+        }
       );
       if (res && res.data) {
         console.log('Data: ', res.data);
         console.log('Avatar: ', res.data.secure_url);
         onChangeUserInfo('profileImageUrl', res.data.secure_url);
       }
-      // const response = await axiosInstance.post(
-      //   API_PATHS.IMAGE.UPLOAD_AVATAR,
-      //   formData,
-      //   {
-      //     headers: {
-      //       'Content-Type': 'multipart/form-data',
-      //     },
-      //   },
-      // );
-      // if (response?.data) {
-      //   console.log('Res: ', response?.data);
-      //   onChangeUserInfo('profileImageUrl', response.data.profileImageUrl);
-      // }
     } catch (error) {
       console.log('error: ', error);
     }

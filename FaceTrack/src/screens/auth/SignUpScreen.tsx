@@ -29,7 +29,6 @@ interface user {
   password: string;
   confirmPassword: string;
   role: string;
-  codeBy?: string;
 }
 const SignUpScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +39,6 @@ const SignUpScreen = () => {
     password: '',
     confirmPassword: '',
     role: '',
-    codeBy: '',
   });
   const [errors, setErrors] = useState<any>({});
   const checkError = () => {
@@ -75,14 +73,9 @@ const SignUpScreen = () => {
       newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
     }
     if (!userInfo.role) {
-      newErrors.role = 'Vui lòng chọn';
-    } else {
-      if (userInfo.role === 'staff') {
-        if (!userInfo.codeBy) {
-          newErrors.codeBy = 'Vui lòng điền mã code';
-        }
-      }
+      newErrors.role = 'Vui lòng chọn vai trò';
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -235,14 +228,11 @@ const SignUpScreen = () => {
                 />
               )}
               <CheckBox
-                isPlaceHoldColor={errors['codeBy']}
                 isBorderColor={errors['role']}
-                code={userInfo.codeBy}
-                setCode={val => onChangeUserInfo('codeBy', val)}
                 onSelect={id => onChangeUserInfo('role', id)}
                 label="Vai trò"
                 data={[
-                  {id: 'leader', name: 'Quản lý'},
+                  {id: 'manage', name: 'Quản lý'},
                   {id: 'staff', name: 'Nhân viên'},
                 ]}
               />

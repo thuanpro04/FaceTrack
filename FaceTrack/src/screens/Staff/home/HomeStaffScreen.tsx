@@ -83,7 +83,7 @@ const HomeStaffScreen = ({navigation}: any) => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasPermissionLocal, setHasPermissionLocal] = useState<boolean>(false);
   const user = useSelector(authSelector);
-  const [isBanner, setIsBanner] = useState(user.role === 'leader');
+  const [isBanner, setIsBanner] = useState(user.role === 'manage');
   const filterMenu = menu.filter(item => item.isNew);
   const firstRow = filterMenu.slice(0, Math.ceil(filterMenu.length / 2));
   const secondRow = filterMenu.slice(Math.ceil(filterMenu.length / 2));

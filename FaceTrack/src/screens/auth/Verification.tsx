@@ -1,5 +1,5 @@
-import {useRoute} from '@react-navigation/native';
-import React, {useEffect, useRef, useState} from 'react';
+import {useFocusEffect, useRoute} from '@react-navigation/native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {StyleSheet, TextInput, View} from 'react-native';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import {
@@ -21,7 +21,6 @@ const Verification = ({navigation}: any) => {
     key?: string;
     userInfo?: string;
   };
-  console.log(code);
   const [currentCode, setCurrentCode] = useState(code);
   const [codeValue, setCodeValue] = useState<any[]>(['', '', '', '']);
   const [timeLimit, setTimeLimit] = useState(60);
@@ -43,6 +42,7 @@ const Verification = ({navigation}: any) => {
     navigation.navigate('reset', {email});
   };
   const handleSignupUser = async () => {
+    reference4.current?.blur();
     setIsLoading(true);
     const res = await authServices.signupUser(userInfo);
     if (res?.data) {
@@ -74,6 +74,9 @@ const Verification = ({navigation}: any) => {
     }
   };
   const handleSendVerifi = async () => {
+    if (timeLimit > 0) {
+      return;
+    }
     setIsLoading(true);
     const res = await authServices.sendVerification(email, key);
     if (res?.data) {
@@ -89,6 +92,7 @@ const Verification = ({navigation}: any) => {
       setCodeValue(['', '', '', '']);
       setTimeLimit(60);
     }
+    setIsLoading(false);
   };
   useEffect(() => {
     if (timeLimit > 0) {
@@ -98,10 +102,13 @@ const Verification = ({navigation}: any) => {
       return () => clearInterval(interval);
     }
   }, [timeLimit]);
-
-  useEffect(() => {
-    reference.current?.focus();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      setTimeout(() => {
+        reference.current?.focus();
+      }, 200);
+    }, []),
+  );
   return (
     <ContainerComponent styles={styles.container}>
       <FontAwesome6
@@ -178,7 +185,7 @@ const Verification = ({navigation}: any) => {
           />
         </View>
         <ButtonComponent
-          disable={timeLimit < 0 || codeValue.length < 4}
+          disable={timeLimit < 0 || codeValue.length < 4 || isLoading}
           label={`Xác minh`}
           styles={styles.verifyButton}
           labelColor={appColors.white}
@@ -189,6 +196,7 @@ const Verification = ({navigation}: any) => {
           styles={styles.footerText}
         />
         <ButtonComponent
+          disable={timeLimit > 0}
           label="Gửi lại mã"
           bgColor="transparent"
           labelColor={appColors.buttonPrimary}

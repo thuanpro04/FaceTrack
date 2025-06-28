@@ -8,20 +8,15 @@ interface Props {
   data: {id: string; name: string}[];
   label: string;
   onSelect: (id: string) => void;
-  code?: string;
-  setCode: (val: string) => void;
   isBorderColor: boolean;
-  isPlaceHoldColor: boolean;
 }
 
 const CheckBox = ({
   data,
   label,
   onSelect,
-  code,
-  setCode,
+
   isBorderColor,
-  isPlaceHoldColor,
 }: Props) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -64,7 +59,7 @@ const CheckBox = ({
           </TouchableOpacity>
         );
       })}
-      {selectedId === 'staff' && (
+      {/* {selectedId === 'staff' && (
         <TextInput
           value={code}
           onChangeText={setCode}
@@ -74,7 +69,7 @@ const CheckBox = ({
             isPlaceHoldColor ? appColors.buttonDanger : appColors.textSecondary
           }
         />
-      )}
+      )} */}
     </View>
   );
 };

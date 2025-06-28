@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
+const { getShortName } = require("../untils/GenerationCode");
+const Mangage = require("../models/Manage");
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
@@ -18,22 +20,22 @@ const checkReferred = async (code) => {
   return !user;
 };
 exports.registerUser = async (req, res) => {
-  const { fullName, email, password, role, codeBy } = req.body;
-  console.log({ fullName, email, password, role, codeBy });
+  const { fullName, email, password, role } = req.body;
+  console.log({ fullName, email, password, role});
 
   if (!fullName || !email || !password) {
     return res.status(400).json({
       message: "Please fill all fields",
     });
   }
-  if (role === "staff") {
-    if (codeBy) {
-      const isCodeInvalid = await checkReferred(codeBy);
-      if (isCodeInvalid) {
-        return res.status(404).json({ message: "Mã code không tồn tại" });
-      }
-    }
-  }
+  // if (role === "staff") {
+  //   if (codeBy) {
+  //     const isCodeInvalid = await checkReferred(codeBy);
+  //     if (isCodeInvalid) {
+  //       return res.status(404).json({ message: "Mã code không tồn tại" });
+  //     }
+  //   }
+  // }
   try {
     const existingUser = await User.findOne({ email }).lean();
     if (existingUser) {
@@ -44,13 +46,18 @@ exports.registerUser = async (req, res) => {
       email,
       password,
       role,
-      referredBy: { code: codeBy ?? null },
     });
+    if(role === "manage"){
+      await Mangage.create({
+        user: user._id,
+
+      })
+    }
     console.log("Đăng kí user thành công");
 
     res.status(201).json({
       _id: user._id,
-      fullName: user.fullName,
+      fullName: getShortName(user.fullName),
       email: user.email,
       role: user.role,
       accessToken: generateToken(user._id),
@@ -99,7 +106,7 @@ exports.loginUser = async (req, res) => {
     await user.save();
     res.status(201).json({
       _id: user._id,
-      fullName: user.fullName,
+      fullName: getShortName(user.fullName),
       email: user.email,
       role: user.role,
       accessToken: generateToken(user._id),
@@ -135,6 +142,9 @@ exports.verifyUser = async (req, res) => {
       auth: {
         user: process.env.USERNAME_EMAIL,
         pass: process.env.PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false, // Bỏ qua kiểm tra chứng chỉ
       },
     });
     const code = getRandom();
@@ -203,14 +213,7 @@ exports.getUserInfo = async (req, res) => {
     });
   }
 };
-exports.uploadImage = async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
-  const imageUrl = `http://localhost:3001/uploads/${req.file.filename}`;
 
-  return res.status(200).json({ profileImageUrl: imageUrl });
-};
 exports.getUserById = async (id) => {
   return await User.findById(id);
 };
