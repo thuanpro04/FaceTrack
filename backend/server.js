@@ -20,6 +20,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // upload các file tĩnh
 // Database connection middleware
+let isDbConnected = false; // Track if the database is connected
 app.use(async (req, res, next) => {
   try {
     if (!isDbConnected) {
