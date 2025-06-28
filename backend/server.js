@@ -20,12 +20,43 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // upload các file tĩnh
-
-connectDb();
-// dọn file rac
-scheduleCleanupOldFiles();
+// Database connection middleware
+app.use(async (req, res, next) => {
+  try {
+    if (!isDbConnected) {
+      console.log("Connecting to database...");
+      await connectDb();
+      isDbConnected = true;
+      console.log("Database connected successfully");
+      
+      // Schedule cleanup only once and only in non-production
+      if (!isCleanupScheduled && process.env.NODE_ENV !== 'production') {
+        try {
+          scheduleCleanupOldFiles();
+          isCleanupScheduled = true;
+          console.log("Cleanup scheduled");
+        } catch (cleanupError) {
+          console.warn("Could not schedule cleanup:", cleanupError.message);
+        }
+      }
+    }
+    next();
+  } catch (error) {
+    console.error("Database connection error:", error);
+    res.status(500).json({ 
+      message: "Database connection failed",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+// connectDb();
+// // dọn file rac
+// scheduleCleanupOldFiles();
 app.get("/", (req, res) => {
   res.send("Welcome to FaceTrack API");
+});
+app.get("/hello", (req, res) => {
+  res.json("Welcome to FaceTrack API");
 });
 app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/auth", authRouter);
