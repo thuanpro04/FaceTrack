@@ -8,7 +8,6 @@ const app = express();
 const authRouter = require("./routes/AuthRouter");
 const faceRouter = require("./routes/faceRouter");
 const { scheduleCleanupOldFiles } = require("./controllers/FaceController");
-const { connectMiddle } = require("./middlewares/authMiddleware");
 
 app.use(
   cors({
@@ -64,4 +63,4 @@ app.use("/api/v1/face", faceRouter);
 // app.listen(port, () => {
 //   console.log(`Server is running on port ${port}`);
 // });
-module.exports = serverless(app);
+module.exports = app;
