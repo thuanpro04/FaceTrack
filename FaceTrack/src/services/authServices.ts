@@ -1,5 +1,6 @@
 import {API_PATHS} from '../api/apiPaths';
 import axiosInstance from '../api/axiosInstance';
+import {info} from '../screens/Staff/profile/EditProfileScreen';
 import {showNotificating} from '../utils/ShowNotification';
 const loginUser = async (data: any) => {
   const res = await axiosInstance.post(API_PATHS.AUTH.LOGIN, data);
@@ -39,9 +40,14 @@ const resetPassword = async (data: any) => {
     console.log('Reset password fail: ', error.response.data.message);
   }
 };
+const upload_Profile = async (data: info) => {
+  const res = await axiosInstance.post(API_PATHS.AUTH.UPLOAD_PROFILE, data);
+  return res;
+};
 export const authServices = {
   signupUser,
   sendVerification,
   loginUser,
   resetPassword,
+  upload_Profile
 };

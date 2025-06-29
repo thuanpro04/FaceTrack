@@ -21,7 +21,7 @@ const checkReferred = async (code) => {
 };
 exports.registerUser = async (req, res) => {
   const { fullName, email, password, role } = req.body;
-  console.log({ fullName, email, password, role});
+  console.log({ fullName, email, password, role });
 
   if (!fullName || !email || !password) {
     return res.status(400).json({
@@ -47,11 +47,10 @@ exports.registerUser = async (req, res) => {
       password,
       role,
     });
-    if(role === "manage"){
+    if (role === "manage") {
       await Mangage.create({
         user: user._id,
-
-      })
+      });
     }
     console.log("Đăng kí user thành công");
 
@@ -216,4 +215,34 @@ exports.getUserInfo = async (req, res) => {
 
 exports.getUserById = async (id) => {
   return await User.findById(id);
+};
+exports.upload_Profile = async (req, res) => {
+  const user = req.body;
+  console.log(user);
+  
+  try {
+    const existingUser = await this.getUserById(user.id);
+    if (!existingUser) {
+      return res.status(404).json({
+        message: "User not found !!",
+      });
+    }
+    const result = await User.findByIdAndUpdate(user.id, user, {
+      new: true, // Trả về document sau khi update (default: false)
+      runValidators: true, // Chạy validation trước khi update
+      select: "fullName email phone profileImageUrl status role",
+      select: "-password",
+    });
+    console.log("Update success: ", result);
+
+    res.status(201).json({
+      message: "Update user info success !!!",
+      date: result,
+    });
+  } catch (error) {
+    console.log("Upload profile error: ", error);
+    return res.status(500).json({
+      message: "upload fail server",
+    });
+  }
 };

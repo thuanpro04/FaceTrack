@@ -4,6 +4,7 @@ import RNFS from 'react-native-fs';
 import axiosInstance from '../api/axiosInstance';
 import {API_PATHS} from '../api/apiPaths';
 import {showNotificating} from '../utils/ShowNotification';
+import axios from 'axios';
 
 const formatFileUri = (filePath: string) => {
   if (filePath.startsWith('file://') || filePath.startsWith('content://')) {
@@ -257,6 +258,18 @@ const timekeepingStaff = async (userId: string, imageUrl: string) => {
   });
   return res;
 };
+const getAvatarCloudinary = async (CLOUD_NAME: string, formData: any) => {
+  const res = await axios.post(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    },
+  );
+  return res;
+};
 export const imageServices = {
   formatFileUri,
   detectFacesFromPhotoStep1,
@@ -268,4 +281,5 @@ export const imageServices = {
   ActionSaveFace,
   checkDetectFacesFromPhoto,
   timekeepingStaff,
+  getAvatarCloudinary,
 };

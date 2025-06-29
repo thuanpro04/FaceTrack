@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema(
     phone: { type: Number, default: null },
     profileImageUrl: { type: String, default: null },
     lockUntil: { type: Date },
+    birthDay: { type: String },
     role: {
       type: String,
       enum: ["staff", "manage", "admin"],
@@ -23,6 +24,7 @@ const UserSchema = new mongoose.Schema(
     lastLogin: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
+    gender: { type: String, enum: ["nam", "nữ", "khác"], default: "nam" },
   },
 
   {

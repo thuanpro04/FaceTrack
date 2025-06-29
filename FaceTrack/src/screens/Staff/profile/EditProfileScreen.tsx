@@ -1,63 +1,66 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
+  Animated,
   Dimensions,
+  Easing,
   Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
-  Animated,
-  Easing,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-import {useSelector} from 'react-redux';
+import {ArrowLeft2} from 'iconsax-react-native';
 import {ImageOrVideo} from 'react-native-image-crop-picker';
-import {authSelector} from '../../../redux/slices/authSlice';
-import axiosInstance from '../../../api/axiosInstance';
-import {API_PATHS} from '../../../api/apiPaths';
+import {useDispatch, useSelector} from 'react-redux';
+import {ContainerComponent, TextComponent} from '../../../components/layout';
+import ButtonAnimation from '../../../components/layout/ButtonAnimation';
+import ButtonImagePicker from '../../../components/layout/ButtonImagePicker';
 import appColors from '../../../constants/appColors';
 import {appSize} from '../../../constants/appSize';
-import {ContainerComponent, TextComponent} from '../../../components/layout';
-import ButtonImagePicker from '../../../components/layout/ButtonImagePicker';
-import ButtonAnimation from '../../../components/layout/ButtonAnimation';
-import {ArrowLeft2} from 'iconsax-react-native';
-import axios from 'axios';
+import {addAuth, authSelector} from '../../../redux/slices/authSlice';
+import {authServices} from '../../../services/authServices';
+import {imageServices} from '../../../services/imageService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {showNotificating} from '../../../utils/ShowNotification';
 
 const {width} = Dimensions.get('window');
 
-interface info {
+export interface info {
   profileImageUrl?: string;
-  fullName: string;
-  email: string;
+  fullName?: string;
   phone: string;
   address: string;
-  gender: 'nam' | 'nữ' | 'khác';
-  dob: Date | null;
+  gender?: 'nam' | 'nữ' | 'khác';
+  birthDay: String | null | Date;
 }
 const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET; // tạo ở bước 3
 const CLOUD_NAME = process.env.CLOUD_NAME; // lấy ở dashboard
 const EditProfileScreen = ({navigation}: any) => {
   const [focusedInput, setFocusedInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<info>({
     fullName: '',
-    email: '',
     phone: '',
     address: '',
-    dob: null,
+    birthDay: null,
     gender: 'nam',
     profileImageUrl: '',
   });
+  const [error, setError] = useState<info>({
+    address: '',
+    birthDay: '',
+    phone: '',
+  });
   const profile = useSelector(authSelector);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-
+  const dispatch = useDispatch();
   // Animation values
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
@@ -130,9 +133,24 @@ const EditProfileScreen = ({navigation}: any) => {
   const onChangeUserInfo = (key: string, value: string) => {
     setUser(prev => ({...prev, [key]: value}));
   };
+  const checkErrorInfo = () => {
+    const newErros: any = {};
+    if (!user.address) {
+      newErros.address = 'Vui lòng nhập địa chỉ';
+    }
+    if (!user.birthDay) {
+      newErros.birthDay = 'Vui lòng lựa chọn ngày sinh';
+    }
+    if (!user.phone) {
+      newErros.phone = 'Vui lòng nhập số điện thoại';
+    }
 
-  const handleSaveProfile = () => {
+    setError(newErros);
+    return Object.keys(newErros).length === 0;
+  };
+  const handleSaveProfile = async () => {
     // Button press animation
+    setIsLoading(true);
     Animated.sequence([
       Animated.timing(buttonPulse, {
         toValue: 0.95,
@@ -145,14 +163,46 @@ const EditProfileScreen = ({navigation}: any) => {
         useNativeDriver: true,
       }),
     ]).start();
+    const isValid = checkErrorInfo();
 
+    if (!isValid) {
+      return;
+    }
+    const data = {...user, id: profile._id};
     // Xử lý lưu thông tin profile
-    console.log('Saving profile...', user);
+    try {
+      const res = await authServices.upload_Profile(data);
+      if (res && res?.data) {
+        console.log('Update success: ', res.data);
+        const userInfo = {
+          ...res.data,
+          accessToken: profile.accessToken,
+        };
+        setTimeout(async () => {
+          dispatch(addAuth(userInfo));
+          await AsyncStorage.setItem('user', JSON.stringify(userInfo));
+          showNotificating.activity(
+            'success',
+            'Cập nhật thành công!',
+            'Chào mừng bạn đến với FaceTrack 🎉',
+          );
+          setIsLoading(false);
+        }, 1200);
+      }
+    } catch (error) {
+      console.log('Save profile error: ', error);
+      showNotificating.activity(
+        'error',
+        '😓 Cập nhật không thành công!',
+        'Vui lòng thử lại lần sau.',
+      );
+      setIsLoading(false);
+    }
   };
 
   const showDatePicker = () => {
-    setDatePickerVisibility(true);
-    setFocusedInput('dob');
+    setDatePickerVisibility(!isDatePickerVisible);
+    setFocusedInput('birthDay');
   };
 
   const hideDatePicker = () => {
@@ -160,12 +210,31 @@ const EditProfileScreen = ({navigation}: any) => {
     setFocusedInput('');
   };
 
-  const handleDateConfirm = (selectedDate: any) => {
+  const handleDateConfirm = (selectedDate: Date) => {
     console.log('Selected date: ', selectedDate);
-    onChangeUserInfo('dob', selectedDate);
+    const dob = `${selectedDate.getDate().toString().padStart(2, '0')}/${(
+      selectedDate.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, '0')}/${selectedDate.getFullYear()}`;
+    console.log('dob: ', dob);
+    onChangeUserInfo('birthDay', dob); // Store as string
     hideDatePicker();
   };
 
+  // Create helper function to convert string back to Date
+  const parseStringToDate = (dateString: any | null): Date => {
+    if (!dateString) return new Date(2000, 0, 1);
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+      const year = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+
+    return new Date(2000, 0, 1);
+  };
   const handleDateCancel = () => {
     console.log('Date picker cancelled');
     hideDatePicker();
@@ -179,19 +248,15 @@ const EditProfileScreen = ({navigation}: any) => {
       name: value.filename || 'photo.jpg',
     });
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    
+
     console.log('Form Data: ', formData);
 
     try {
-      const res = await axios.post(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      const res = await imageServices.getAvatarCloudinary(
+        CLOUD_NAME ?? '',
         formData,
-        {
-          headers:{
-            'Content-Type':'multipart/form-data',
-          }
-        }
       );
+
       if (res && res.data) {
         console.log('Data: ', res.data);
         console.log('Avatar: ', res.data.secure_url);
@@ -369,22 +434,12 @@ const EditProfileScreen = ({navigation}: any) => {
             {/* Animated Form Inputs */}
             {renderAnimatedInput(
               'Họ và tên',
-              user.fullName,
+              user.fullName ?? '',
               text => onChangeUserInfo('fullName', text),
               'person',
               'default',
               'fullName',
               1,
-            )}
-
-            {renderAnimatedInput(
-              'Email',
-              user.email,
-              text => onChangeUserInfo('email', text),
-              'email',
-              'email-address',
-              'email',
-              2,
             )}
 
             {renderAnimatedInput(
@@ -426,43 +481,37 @@ const EditProfileScreen = ({navigation}: any) => {
               <TouchableOpacity
                 style={[
                   styles.inputWrapper,
-                  focusedInput === 'dob' && styles.inputWrapperFocused,
+                  focusedInput === 'birthDay' && styles.inputWrapperFocused,
                   {
                     width: '80%',
                   },
                 ]}
                 activeOpacity={0.7}
                 onPress={showDatePicker}
-                onFocus={() => setFocusedInput('dob')}>
+                onFocus={() => setFocusedInput('birthDay')}>
                 <Icon
                   name="cake"
                   size={20}
                   color={
-                    focusedInput === 'dob' || isDatePickerVisible
+                    focusedInput === 'birthDay' || isDatePickerVisible
                       ? '#667eea'
                       : '#9ca3af'
                   }
                 />
                 <TextComponent
                   label={
-                    user.dob
-                      ? `${user.dob.getDate().toString().padStart(2, '0')}/${(
-                          user.dob.getMonth() + 1
-                        )
-                          .toString()
-                          .padStart(2, '0')}/${user.dob.getFullYear()}`
-                      : 'Chọn ngày sinh'
+                    user.birthDay ? user.birthDay.toString() : 'Chọn ngày sinh'
                   }
                   styles={[
                     styles.input,
-                    {color: user.dob ? '#1f2937' : '#9ca3af'},
+                    {color: user.birthDay ? '#1f2937' : '#9ca3af'},
                   ]}
                 />
               </TouchableOpacity>
               <DateTimePickerModal
                 isVisible={isDatePickerVisible}
                 mode="date"
-                date={user.dob || new Date(2000, 0, 1)}
+                date={parseStringToDate(user.birthDay)}
                 maximumDate={new Date()}
                 minimumDate={new Date(1950, 0, 1)}
                 onConfirm={handleDateConfirm}
@@ -501,7 +550,7 @@ const EditProfileScreen = ({navigation}: any) => {
               ]}>
               <TextComponent label="Giới tính" styles={styles.genderLabel} />
               <View style={styles.genderContainer}>
-                {['Nam', 'Nữ', 'Khác'].map((option, index) => (
+                {['nam', 'nữ', 'khác'].map((option, index) => (
                   <TouchableOpacity
                     key={option}
                     style={[
@@ -724,7 +773,6 @@ const styles = StyleSheet.create({
   },
   saveButtonContainer: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
   },
   saveButton: {
     borderRadius: 16,
