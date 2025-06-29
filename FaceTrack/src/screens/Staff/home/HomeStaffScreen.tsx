@@ -226,10 +226,7 @@ const HomeStaffScreen = ({navigation}: any) => {
             borderRadius: 8,
           }}>
           <ButtonAnimation onPress={() => console.log('hello')}>
-            <Ionicons
-              name="notifications-outline"
-              size={appSize.iconLarge}
-            />
+            <Ionicons name="notifications-outline" size={appSize.iconLarge} />
           </ButtonAnimation>
           <View
             style={{
@@ -244,6 +241,7 @@ const HomeStaffScreen = ({navigation}: any) => {
           />
         </View>
         <DropdownMenu
+          id={user._id}
           navigation={navigation}
           visible={isVisible}
           onClose={onCloseModal}
@@ -475,5 +473,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
   },
-  
 });

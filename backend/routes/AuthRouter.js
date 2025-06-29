@@ -5,14 +5,15 @@ const {
   verifyUser,
   resetPassword,
   getUserInfo,
-  upload_Profile,
+  upload_Profile,upload_Code
 } = require("../controllers/AuthController");
-const { protect } = require("../middlewares/authMiddleware");
+const { protect, limiter } = require("../middlewares/authMiddleware");
 const router = express.Router();
 router.post("/register", registerUser);
-router.post("/login", loginUser);
+router.post("/login", limiter, loginUser);
 router.post("/verify", verifyUser);
 router.post("/reset", resetPassword);
 router.get("/getUser", protect, getUserInfo);
-router.post("/upload", upload_Profile)
+router.put("/me", limiter, upload_Profile);
+router.put("/code", limiter, upload_Code);
 module.exports = router;

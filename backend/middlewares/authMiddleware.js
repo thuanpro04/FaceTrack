@@ -1,8 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const multer = require("multer");
-const connectDb = require("../config/mongodb");
-const { scheduleCleanupOldFiles } = require("../controllers/FaceController");
+const rateLimit = require("express-rate-limit");
 exports.protect = async (req, res, next) => {
   let accessToken = req.headers.authorization?.split(" ")[1];
   if (!accessToken) {
@@ -20,5 +18,8 @@ exports.protect = async (req, res, next) => {
     });
   }
 };
-
-
+exports.limiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 20,
+  message: "Too many requests from this IP, please try again later",
+});

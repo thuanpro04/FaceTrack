@@ -21,12 +21,17 @@ const UserSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    gender: { type: String, enum: ["nam", "nữ", "khác"], default: "nam" },
+    requestManages: [
+      {
+        type: String,
+        ref: "Manage",
+      },
+    ],
     lastLogin: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
-    gender: { type: String, enum: ["nam", "nữ", "khác"], default: "nam" },
   },
-
   {
     timestamps: true,
   }

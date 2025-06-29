@@ -9,9 +9,16 @@ const manageSchema = new mongoose.Schema({
     required: true,
     ref: "User",
   },
+  requestStaff: [
+    {
+      type: String,
+      ref: "User",
+    },
+  ],
   refferalCode: {
     type: String,
     unique: true,
+    index: true,
   },
   startTrialDate: {
     type: Date,

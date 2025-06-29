@@ -1,30 +1,20 @@
-import {
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {
-  RowComponent,
-  SpaceComponent,
-  TextComponent,
-} from '../../components/layout';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {appSize} from '../../constants/appSize';
-import appColors from '../../constants/appColors';
-import {useDispatch} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {removeAuth} from '../../redux/slices/authSlice';
-import Feather from 'react-native-vector-icons/Feather';
-import InputCodeModal from './InputCodeModal';
 import {Electricity, Happyemoji} from 'iconsax-react-native';
+import React, {useEffect, useState} from 'react';
+import {Modal, StyleSheet, TouchableWithoutFeedback, View} from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {useDispatch} from 'react-redux';
+import {RowComponent, TextComponent} from '../../components/layout';
+import appColors from '../../constants/appColors';
+import {appSize} from '../../constants/appSize';
+import {removeAuth} from '../../redux/slices/authSlice';
+import InputCodeModal from './InputCodeModal';
+import {authServices} from '../../services/authServices';
 interface Props {
   visible: boolean;
   onClose: () => void;
   navigation: any;
+  id: string;
 }
 const menu = [
   {
@@ -65,7 +55,7 @@ const menu = [
   },
 ];
 const DropdownMenu = (props: Props) => {
-  const {visible, onClose, navigation} = props;
+  const {visible, onClose, navigation, id} = props;
   const [isVisible, setIsVisible] = useState(false);
   const [isCodeModal, setIsCodeModal] = useState(false);
   const dispatch = useDispatch();
@@ -101,7 +91,16 @@ const DropdownMenu = (props: Props) => {
     setIsCodeModal(false);
     onClose();
   };
-
+  const onSubmitCode = async (code: string) => {
+    try {
+      const res = await authServices.upload_Code(id, code);
+      if (res && res?.data) {
+        console.log('Update code successfully !!!');
+      }
+    } catch (error) {
+      console.log('Submit update code error: ', error);
+    }
+  };
   return !isCodeModal ? (
     <Modal visible={isVisible} transparent onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
@@ -124,7 +123,7 @@ const DropdownMenu = (props: Props) => {
     </Modal>
   ) : (
     <InputCodeModal
-      onSubmit={() => console.log('Code submitted')}
+      onSubmit={onSubmitCode}
       onClose={onCloseCodeModal}
       visible={isCodeModal}
     />

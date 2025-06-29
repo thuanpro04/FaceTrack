@@ -2,8 +2,12 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
-const { getShortName } = require("../untils/GenerationCode");
+const {
+  getShortName,
+  generateReferralCode,
+} = require("../untils/GenerationCode");
 const Mangage = require("../models/Manage");
+const Manage = require("../models/Manage");
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
@@ -14,10 +18,8 @@ const findUserWithEmail = async (email) => {
   return await User.findOne({ email });
 };
 const checkReferred = async (code) => {
-  const user = await User.find({ referralCode: code });
-  console.log("user: ", user);
-
-  return !user;
+  const manage = await Manage.find({ referralCode: code });
+  return manage[0]._id;
 };
 exports.registerUser = async (req, res) => {
   const { fullName, email, password, role } = req.body;
@@ -28,14 +30,6 @@ exports.registerUser = async (req, res) => {
       message: "Please fill all fields",
     });
   }
-  // if (role === "staff") {
-  //   if (codeBy) {
-  //     const isCodeInvalid = await checkReferred(codeBy);
-  //     if (isCodeInvalid) {
-  //       return res.status(404).json({ message: "Mã code không tồn tại" });
-  //     }
-  //   }
-  // }
   try {
     const existingUser = await User.findOne({ email }).lean();
     if (existingUser) {
@@ -47,6 +41,7 @@ exports.registerUser = async (req, res) => {
       password,
       role,
     });
+
     if (role === "manage") {
       await Mangage.create({
         user: user._id,
@@ -218,8 +213,6 @@ exports.getUserById = async (id) => {
 };
 exports.upload_Profile = async (req, res) => {
   const user = req.body;
-  console.log(user);
-  
   try {
     const existingUser = await this.getUserById(user.id);
     if (!existingUser) {
@@ -243,6 +236,66 @@ exports.upload_Profile = async (req, res) => {
     console.log("Upload profile error: ", error);
     return res.status(500).json({
       message: "upload fail server",
+    });
+  }
+};
+exports.upload_Code = async (req, res) => {
+  const { id, code } = req.body;
+  console.log({ id, code });
+
+  // Validate input
+  if (!id || !code) {
+    return res
+      .status(400)
+      .json({ message: "Missing required fields: id or code" });
+  }
+
+  try {
+    // 1. Kiểm tra mã giới thiệu (sử dụng findOne để tránh sai logic)
+    const referrer = await Manage.findOne({ refferalCode: code });
+    if (!referrer) {
+      return res.status(400).json({ message: "Referral code does not exist" });
+    }
+
+    // 2. Kiểm tra user tồn tại
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.requestManages.includes(code)) {
+      return res.status(201).json({
+        message: "Code already existing in user",
+      });
+    }
+    // 3. Cập nhật song song (dùng Promise.all để tối ưu tốc độ)
+    const [updatedManage, updatedUser] = await Promise.all([
+      Manage.findByIdAndUpdate(
+        referrer._id,
+        { requestStaff: code },
+        { new: true } // Trả về document sau khi update
+      ),
+      User.findByIdAndUpdate(user._id, { requestManages: code }, { new: true }),
+    ]);
+
+    // 4. Kiểm tra kết quả cập nhật
+    if (!updatedManage || !updatedUser) {
+      throw new Error("Failed to update documents");
+    }
+    console.log("Referral code updated successfully");
+
+    // 5. Trả về response thành công
+    res.status(200).json({
+      message: "Referral code updated successfully",
+      data: {
+        manage: updatedManage.requestStaff,
+        user: updatedUser.requestManages,
+      },
+    });
+  } catch (error) {
+    console.error("Upload code error:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message, // Chỉ trả về error.message trong môi trường dev
     });
   }
 };

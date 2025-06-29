@@ -41,7 +41,14 @@ const resetPassword = async (data: any) => {
   }
 };
 const upload_Profile = async (data: info) => {
-  const res = await axiosInstance.post(API_PATHS.AUTH.UPLOAD_PROFILE, data);
+  const res = await axiosInstance.put(API_PATHS.AUTH.UPLOAD_PROFILE, data);
+  return res;
+};
+const upload_Code = async (id: string, code: string) => {
+  const res = await axiosInstance.put(API_PATHS.AUTH.SUBMIT_CODE, {
+    id,
+    code,
+  });
   return res;
 };
 export const authServices = {
@@ -49,5 +56,6 @@ export const authServices = {
   sendVerification,
   loginUser,
   resetPassword,
-  upload_Profile
+  upload_Profile,
+  upload_Code,
 };
