@@ -8,18 +8,24 @@ const {
 } = require("../untils/GenerationCode");
 const Mangage = require("../models/Manage");
 const Manage = require("../models/Manage");
+const Staff = require("../models/Staff");
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 const getRandom = () => {
   return Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
 };
+
 const findUserWithEmail = async (email) => {
   return await User.findOne({ email });
 };
-const checkReferred = async (code) => {
-  const manage = await Manage.find({ referralCode: code });
-  return manage[0]._id;
+exports.getManageInfoReferred = async (code) => {
+  return await Manage.findOne({ referralCode: code })
+    .populate({
+      path: "user",
+      select: "fullName email phone profileImageUrl status role",
+    })
+    .select("referralCode requestStaff origanizations ")
 };
 exports.registerUser = async (req, res) => {
   const { fullName, email, password, role } = req.body;
@@ -103,6 +109,7 @@ exports.loginUser = async (req, res) => {
       fullName: getShortName(user.fullName),
       email: user.email,
       role: user.role,
+      profileImageUrl: user.profileImageUrl,
       accessToken: generateToken(user._id),
     });
     console.log("Login user thành công");
@@ -230,7 +237,7 @@ exports.upload_Profile = async (req, res) => {
 
     res.status(201).json({
       message: "Update user info success !!!",
-      date: result,
+      result,
     });
   } catch (error) {
     console.log("Upload profile error: ", error);
@@ -243,7 +250,6 @@ exports.upload_Code = async (req, res) => {
   const { id, code } = req.body;
   console.log({ id, code });
 
-  // Validate input
   if (!id || !code) {
     return res
       .status(400)
@@ -251,51 +257,54 @@ exports.upload_Code = async (req, res) => {
   }
 
   try {
-    // 1. Kiểm tra mã giới thiệu (sử dụng findOne để tránh sai logic)
-    const referrer = await Manage.findOne({ refferalCode: code });
+    // 1. Tìm Manage chứa mã giới thiệu
+    const referrer = await this.getManageInfoReferred(code);
     if (!referrer) {
       return res.status(400).json({ message: "Referral code does not exist" });
     }
 
-    // 2. Kiểm tra user tồn tại
-    const user = await User.findById(id);
+    // 2. Tìm staff theo userId
+    const user = await User.findById({ _id: id });
+    console.log(user, 12);
+
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "Staff not found with user id" });
     }
-    if (user.requestManages.includes(code)) {
-      return res.status(201).json({
-        message: "Code already existing in user",
-      });
+
+    // 3. Kiểm tra xem đã dùng code này chưa
+    if (user.requestManages.some((item) => item.referralCode === code)) {
+      return res.status(201).json({ message: "Code already used by user" });
     }
-    // 3. Cập nhật song song (dùng Promise.all để tối ưu tốc độ)
-    const [updatedManage, updatedUser] = await Promise.all([
+
+    // 4. Cập nhật Manage và Staff
+    const [updatedManage, updatedStaff] = await Promise.all([
       Manage.findByIdAndUpdate(
         referrer._id,
-        { requestStaff: code },
-        { new: true } // Trả về document sau khi update
+        { $push: { requestStaff: { user: id } } },
+        { new: true }
       ),
-      User.findByIdAndUpdate(user._id, { requestManages: code }, { new: true }),
+      User.findByIdAndUpdate(
+        user._id,
+        { $push: { requestManages: { referralCode: code } } },
+        { new: true }
+      ),
     ]);
 
-    // 4. Kiểm tra kết quả cập nhật
-    if (!updatedManage || !updatedUser) {
+    if (!updatedManage || !updatedStaff) {
       throw new Error("Failed to update documents");
     }
-    console.log("Referral code updated successfully");
 
-    // 5. Trả về response thành công
     res.status(200).json({
       message: "Referral code updated successfully",
       data: {
         manage: updatedManage.requestStaff,
-        user: updatedUser.requestManages,
+        user: updatedStaff.requestManages,
       },
     });
   } catch (error) {
     console.error("Upload code error:", error);
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message, // Chỉ trả về error.message trong môi trường dev
-    });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };

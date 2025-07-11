@@ -24,8 +24,20 @@ const UserSchema = new mongoose.Schema(
     gender: { type: String, enum: ["nam", "nữ", "khác"], default: "nam" },
     requestManages: [
       {
-        type: String,
-        ref: "Manage",
+        referralCode: {
+          type: String,
+          ref: "Manage",
+          index: true,
+        },
+        status: {
+          type: String,
+          enum: ["pending", "approved", "rejected"],
+          default: "pending",
+        },
+        submittedAt: {
+          type: Date,
+          default: Date.now,
+        },
       },
     ],
     lastLogin: { type: Date, default: Date.now },

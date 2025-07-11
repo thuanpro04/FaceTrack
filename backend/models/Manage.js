@@ -11,11 +11,23 @@ const manageSchema = new mongoose.Schema({
   },
   requestStaff: [
     {
-      type: String,
-      ref: "User",
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        index: true,
+      },
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+      },
+      submittedAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
   ],
-  refferalCode: {
+  referralCode: {
     type: String,
     unique: true,
     index: true,
@@ -43,8 +55,8 @@ manageSchema.pre("save", async function (next) {
         this.startTrialDate.getTime() + 365 * 24 * 60 * 60 * 1000
       );
     }
-    if (!this.refferalCode) {
-      this.refferalCode = generateReferralCode();
+    if (!this.referralCode) {
+      this.referralCode = generateReferralCode();
     }
   }
   next();

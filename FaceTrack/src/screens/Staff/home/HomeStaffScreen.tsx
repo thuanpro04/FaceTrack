@@ -32,6 +32,7 @@ import PlanBannerModal from '../../modals/PlanBannerModal';
 import LoadingModal from '../../modals/LoadingModal';
 import EnhancedCardComponent from '../Expand/Component/EnhancedCardComponent';
 import ButtonAnimation from '../../../components/layout/ButtonAnimation';
+import {authServices} from '../../../services/authServices';
 
 type Place = {
   title: string;
@@ -170,6 +171,19 @@ const HomeStaffScreen = ({navigation}: any) => {
   const onNavigation = (name: string) => {
     navigation.navigate(`${name}`);
   };
+  const onSubmitCode = async (code: string) => {
+    try {
+      setIsLoading(true);
+      const res = await authServices.upload_Code(user._id, code);
+      if (res && res?.data) {
+        console.log('Update code successfully !!!');
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.log('Submit update code error: ', error);
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({window}) => {
       setScreenData(window);
@@ -187,7 +201,9 @@ const HomeStaffScreen = ({navigation}: any) => {
 
     init();
   }, []);
+  
   const isLandscape = screenData.width > screenData.height;
+  console.log(user,12)
   const HeaderHome = () => {
     return (
       <RowComponent styles={{marginVertical: 12, paddingHorizontal: 16}}>
@@ -241,7 +257,7 @@ const HomeStaffScreen = ({navigation}: any) => {
           />
         </View>
         <DropdownMenu
-          id={user._id}
+          onSubmitCode={onSubmitCode}
           navigation={navigation}
           visible={isVisible}
           onClose={onCloseModal}

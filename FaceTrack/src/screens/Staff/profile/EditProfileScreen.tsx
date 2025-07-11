@@ -16,7 +16,7 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-import {ArrowLeft2} from 'iconsax-react-native';
+import {ArrowLeft2, CloseCircle} from 'iconsax-react-native';
 import {ImageOrVideo} from 'react-native-image-crop-picker';
 import {useDispatch, useSelector} from 'react-redux';
 import {ContainerComponent, TextComponent} from '../../../components/layout';
@@ -29,7 +29,7 @@ import {authServices} from '../../../services/authServices';
 import {imageServices} from '../../../services/imageService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {showNotificating} from '../../../utils/ShowNotification';
-
+import AntDesign from 'react-native-vector-icons/AntDesign';
 const {width} = Dimensions.get('window');
 
 export interface info {
@@ -45,20 +45,20 @@ const CLOUD_NAME = process.env.CLOUD_NAME; // lấy ở dashboard
 const EditProfileScreen = ({navigation}: any) => {
   const [focusedInput, setFocusedInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [user, setUser] = useState<info>({
-    fullName: '',
-    phone: '',
-    address: '',
-    birthDay: null,
-    gender: 'nam',
-    profileImageUrl: '',
-  });
   const [error, setError] = useState<info>({
     address: '',
     birthDay: '',
     phone: '',
   });
   const profile = useSelector(authSelector);
+  const [user, setUser] = useState<info>({
+    fullName: profile.fullName,
+    phone: profile.phone,
+    address: profile.address,
+    birthDay: profile.birthDay,
+    gender: profile.gender ?? 'nam',
+    profileImageUrl: profile.profileImageUrl,
+  });
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const dispatch = useDispatch();
   // Animation values
@@ -144,6 +144,9 @@ const EditProfileScreen = ({navigation}: any) => {
     if (!user.phone) {
       newErros.phone = 'Vui lòng nhập số điện thoại';
     }
+    if (user.phone && !/^\d{10,11}$/.test(user.phone)) {
+      newErros.phone = 'Số điện thoại không hợp lệ';
+    }
 
     setError(newErros);
     return Object.keys(newErros).length === 0;
@@ -173,9 +176,9 @@ const EditProfileScreen = ({navigation}: any) => {
     try {
       const res = await authServices.upload_Profile(data);
       if (res && res?.data) {
-        console.log('Update success: ', res.data);
+        console.log('Update success: ', res.data.result);
         const userInfo = {
-          ...res.data,
+          ...res.data.result,
           accessToken: profile.accessToken,
         };
         setTimeout(async () => {
@@ -188,6 +191,7 @@ const EditProfileScreen = ({navigation}: any) => {
           );
           setIsLoading(false);
         }, 1200);
+        navigation.navigate('home');
       }
     } catch (error) {
       console.log('Save profile error: ', error);
@@ -319,6 +323,17 @@ const EditProfileScreen = ({navigation}: any) => {
             onFocus={() => setFocusedInput(fieldKey)}
             onBlur={() => setFocusedInput('')}
           />
+          {value && (
+            <ButtonAnimation
+              onPress={() => onChangeUserInfo(fieldKey, '')}
+              styles={{backgroundColor: 'transparent'}}>
+              <AntDesign
+                name="close"
+                size={appSize.iconSmall}
+                color={appColors.textSecondary}
+              />
+            </ButtonAnimation>
+          )}
         </Animated.View>
       </Animated.View>
     );

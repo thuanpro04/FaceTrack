@@ -14,7 +14,7 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   navigation: any;
-  id: string;
+  onSubmitCode: (code: string) => void;
 }
 const menu = [
   {
@@ -55,7 +55,7 @@ const menu = [
   },
 ];
 const DropdownMenu = (props: Props) => {
-  const {visible, onClose, navigation, id} = props;
+  const {visible, onClose, navigation, onSubmitCode} = props;
   const [isVisible, setIsVisible] = useState(false);
   const [isCodeModal, setIsCodeModal] = useState(false);
   const dispatch = useDispatch();
@@ -91,16 +91,7 @@ const DropdownMenu = (props: Props) => {
     setIsCodeModal(false);
     onClose();
   };
-  const onSubmitCode = async (code: string) => {
-    try {
-      const res = await authServices.upload_Code(id, code);
-      if (res && res?.data) {
-        console.log('Update code successfully !!!');
-      }
-    } catch (error) {
-      console.log('Submit update code error: ', error);
-    }
-  };
+
   return !isCodeModal ? (
     <Modal visible={isVisible} transparent onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>

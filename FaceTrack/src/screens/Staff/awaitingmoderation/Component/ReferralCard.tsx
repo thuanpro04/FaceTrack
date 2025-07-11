@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -7,14 +8,16 @@ import {
 } from 'react-native';
 import React, {useState} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {ReferralRequest} from '../AwaitingModerationScreen';
 import {RowComponent, TextComponent} from '../../../../components/layout';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import appColors from '../../../../constants/appColors';
+import {formatDateToVn} from '../../../../utils/format';
 interface Props {
-  request: ReferralRequest;
+  request: any;
 }
 const ReferralCard = (props: Props) => {
   const {request} = props;
+
   const [expanded, setExpanded] = useState(false);
   const renderStatusIcon = (status: string) => {
     switch (status) {
@@ -52,15 +55,8 @@ const ReferralCard = (props: Props) => {
         return 'Không xác định';
     }
   };
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  };
+  console.log('request: ', request);
+
   return (
     <View style={styles.card}>
       <TouchableOpacity
@@ -69,18 +65,22 @@ const ReferralCard = (props: Props) => {
         <View style={styles.cardHeaderLeft}>
           <View style={styles.statusContainer}>
             {renderStatusIcon(request.status)}
-            <Text
-              style={[
+            <TextComponent
+              label={getStatusText(request.status)}
+              styles={[
                 styles.statusText,
                 {color: getStatusColor(request.status)},
-              ]}>
-              {getStatusText(request.status)}
-            </Text>
+              ]}
+            />
           </View>
-          <Text style={styles.referralCode}>{request.referralCode}</Text>
-          <Text style={styles.submitDate}>
-            Gửi lúc: {formatDate(request.submittedAt)}
-          </Text>
+          <TextComponent
+            label={request.referralCode}
+            styles={styles.referralCode}
+          />
+          <TextComponent
+            label={`Gửi lúc: ${formatDateToVn(request.submittedAt)}`}
+            styles={styles.submitDate}
+          />
         </View>
         <AntDesign name={expanded ? 'up' : 'down'} size={16} color="#8E8E93" />
       </TouchableOpacity>
@@ -88,33 +88,41 @@ const ReferralCard = (props: Props) => {
         <View style={styles.cardContent}>
           {request.manager && (
             <View style={styles.managerSection}>
-              <View style={styles.sectionHeader}>
+              <RowComponent styles={styles.sectionHeader}>
                 <MaterialIcons name="person" size={20} color="#007AFF" />
                 <TextComponent
                   label="Thông tin Quản lý"
                   styles={styles.sectionTitle}
                 />
-              </View>
-              <View style={styles.managerInfo}>
-                <View style={styles.avatar}>
-                  <TextComponent
-                    label={
-                      request.manager.fullName.split(' ').pop()?.charAt(0) ?? ''
-                    }
-                    styles={styles.avatarText}
+              </RowComponent>
+              <RowComponent styles={styles.managerInfo}>
+                {!request?.manager?.profileImageUrl ? (
+                  <Image
+                    source={request.manager.profileImageUrl}
+                    style={styles.avatar}
                   />
-                </View>
+                ) : (
+                  <View style={styles.avatar}>
+                    <TextComponent
+                      label={
+                        request.manager.fullName.split(' ').pop()?.charAt(0) ??
+                        ''
+                      }
+                      styles={styles.avatarText}
+                    />
+                  </View>
+                )}
                 <View style={styles.managerDetails}>
                   <TextComponent
                     label={request.manager.fullName}
                     styles={styles.managerName}
                   />
                   <TextComponent
-                    label={request.manager.position}
+                    label={request.manager.position ?? 'Chức vụ'}
                     styles={styles.managerPosition}
                   />
                   <TextComponent
-                    label={request.manager.department}
+                    label={request.manager.department ?? 'Phòng ban'}
                     styles={styles.managerDepartment}
                   />
                   <View style={styles.contactInfo}>
@@ -134,7 +142,7 @@ const ReferralCard = (props: Props) => {
                     </View>
                   </View>
                 </View>
-              </View>
+              </RowComponent>
             </View>
           )}
 
@@ -152,9 +160,7 @@ const ReferralCard = (props: Props) => {
                 styles={styles.responseMessage}
               />
               <TextComponent
-                label={`Phản hồi lúc: ${formatDate(
-                  request.adminResponse.reviewedAt,
-                )}`}
+                label={`Phản hồi lúc: ${request.adminResponse.reviewedAt}`}
                 styles={styles.responseDate}
               />
             </View>
@@ -162,7 +168,7 @@ const ReferralCard = (props: Props) => {
 
           <View style={styles.requestInfo}>
             <TextComponent
-              label={`ID: ${request.id}`}
+              label={`ID: ${request._id}`}
               styles={styles.requestId}
             />
           </View>
@@ -187,7 +193,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 2,
-    
   },
   cardHeader: {
     flexDirection: 'row',
@@ -195,7 +200,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderRadius: 12,
-
   },
   cardHeaderLeft: {
     flex: 1,
@@ -246,7 +250,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#007AFF',
+    backgroundColor: appColors.gray,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

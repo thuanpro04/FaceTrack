@@ -1,5 +1,5 @@
 exports.generateReferralCode = () => {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
 };
 exports.getShortName = (fullName) => {
   if (!fullName) return "";

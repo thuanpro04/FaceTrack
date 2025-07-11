@@ -1,61 +1,61 @@
+import {useFocusEffect} from '@react-navigation/native';
+import {ArrowLeft2} from 'iconsax-react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
-  FlatList,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
   Animated,
   Easing,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {useSelector} from 'react-redux';
 import {
   ContainerComponent,
-  RowComponent,
   SpaceComponent,
   TextComponent,
 } from '../../../components/layout';
-import ReferralCard from './Component/ReferralCard';
-import {ArrowLeft2} from 'iconsax-react-native';
-import {appSize} from '../../../constants/appSize';
-import appColors from '../../../constants/appColors';
-import HeaderComponent from '../../../components/layout/HeaderComponent';
 import ButtonAnimation from '../../../components/layout/ButtonAnimation';
+import appColors from '../../../constants/appColors';
+import {appSize} from '../../../constants/appSize';
+import {authSelector} from '../../../redux/slices/authSlice';
+import {userServices} from '../../../services/userServices';
+import ReferralCard from './Component/ReferralCard';
 
 export interface Manager {
-  fullName: string;
-  position: string;
-  department: string;
-  email: string;
-  phone: string;
-  avatar?: string;
-}
-
-export interface ReferralRequest {
-  id: string;
-  referralCode: string;
-  status: 'pending' | 'approved' | 'rejected';
-  submittedAt: Date;
-  reviewedAt?: Date;
-  adminResponse?: {
-    message: string;
-    reviewedAt: Date;
+  user: {
+    _id: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    profileImageUrl?: string;
+    status: 'active' | 'inactive';
+    role: 'manager' | 'staff';
   };
-  manager?: Manager;
+  requestStaff?: [
+    {
+      referralCode: string;
+      status: 'pending' | 'approved' | 'rejected';
+      _id?: string;
+      submittedAt: Date;
+    },
+  ];
+  origanizations?: {
+    name: string;
+    description: string;
+    address: string;
+  };
 }
 
 const AwaitingModerationScreen = ({navigation}: any) => {
   const [refreshing, setRefreshing] = useState(false);
-  const [referralRequests, setReferralRequests] = useState<ReferralRequest[]>(
-    [],
-  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [manages, setManages] = useState<Manager[]>([]);
+
   const [selectedFilter, setSelectedFilter] = useState<
     'all' | 'pending' | 'approved' | 'rejected'
   >('all');
-
+  const user = useSelector(authSelector);
   // Animation refs
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const headerTranslateY = useRef(new Animated.Value(-30)).current;
@@ -67,93 +67,23 @@ const AwaitingModerationScreen = ({navigation}: any) => {
   const emptyStateOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const sampleData: ReferralRequest[] = [
-      {
-        id: 'req001',
-        referralCode: 'TEAM123',
-        status: 'approved',
-        submittedAt: new Date('2024-01-15'),
-        reviewedAt: new Date('2024-01-16'),
-        adminResponse: {
-          message: 'Mã giới thiệu hợp lệ và đã được phê duyệt.',
-          reviewedAt: new Date('2024-01-16'),
-        },
-        manager: {
-          fullName: 'Nguyễn Văn An',
-          position: 'Trưởng phòng Kinh doanh',
-          department: 'Phòng Kinh doanh',
-          email: 'nguyen.van.an@company.com',
-          phone: '0912-345-678',
-        },
-      },
-      {
-        id: 'req002',
-        referralCode: 'SALES456',
-        status: 'pending',
-        submittedAt: new Date('2024-01-18'),
-        manager: {
-          fullName: 'Trần Thị Bình',
-          position: 'Giám đốc Nhân sự',
-          department: 'Phòng Nhân sự',
-          email: 'tran.thi.binh@company.com',
-          phone: '0987-654-321',
-        },
-      },
-      {
-        id: 'req003',
-        referralCode: 'TECH789',
-        status: 'rejected',
-        submittedAt: new Date('2024-01-10'),
-        reviewedAt: new Date('2024-01-12'),
-        adminResponse: {
-          message: 'Mã giới thiệu không hợp lệ hoặc đã hết hạn sử dụng.',
-          reviewedAt: new Date('2024-01-12'),
-        },
-        manager: {
-          fullName: 'Lê Minh Cường',
-          position: 'Trưởng phòng IT',
-          department: 'Phòng Công nghệ',
-          email: 'le.minh.cuong@company.com',
-          phone: '0901-234-567',
-        },
-      },
-      {
-        id: 'req004',
-        referralCode: 'MARKETING999',
-        status: 'approved',
-        submittedAt: new Date('2024-01-20'),
-        reviewedAt: new Date('2024-01-21'),
-        adminResponse: {
-          message: 'Mã giới thiệu đã được xác nhận và phê duyệt thành công.',
-          reviewedAt: new Date('2024-01-21'),
-        },
-        manager: {
-          fullName: 'Phạm Thu Hương',
-          position: 'Giám đốc Marketing',
-          department: 'Phòng Marketing',
-          email: 'pham.thu.huong@company.com',
-          phone: '0934-567-890',
-        },
-      },
-      {
-        id: 'req005',
-        referralCode: 'FINANCE555',
-        status: 'pending',
-        submittedAt: new Date('2024-01-22'),
-        manager: {
-          fullName: 'Hoàng Văn Đức',
-          position: 'Trưởng phòng Tài chính',
-          department: 'Phòng Tài chính',
-          email: 'hoang.van.duc@company.com',
-          phone: '0945-678-901',
-        },
-      },
-    ];
-    setReferralRequests(sampleData);
-
     // Start entrance animations
     startEntranceAnimations();
   }, []);
+  const getManageInfo = async () => {
+    try {
+      setIsLoading(true);
+      const res = await userServices.getManageInfo(user._id);
+      if (res && res.data) {
+        console.log(`${res.data.message}`, res.data.manageInfo);
+        setManages(res.data.manageInfo);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.log('get manage info error: ', error);
+      setIsLoading(false);
+    }
+  };
 
   const startEntranceAnimations = () => {
     // Header animation
@@ -227,28 +157,48 @@ const AwaitingModerationScreen = ({navigation}: any) => {
   };
 
   const getStatusCount = (status: 'pending' | 'approved' | 'rejected') => {
-    return referralRequests.filter(req => req.status === status).length;
+    return manages.reduce((count, manage) => {
+      const staffArr = Array.isArray(manage.requestStaff)
+        ? manage.requestStaff
+        : [];
+      return count + staffArr.filter(item => item.status === status).length;
+    }, 0);
   };
 
-  const filteredRequests = referralRequests.filter(
-    request => selectedFilter === 'all' || request.status === selectedFilter,
-  );
+  const filteredItems =
+    selectedFilter === 'all'
+      ? manages.flatMap((m:any) =>
+          (m.requestStaff || []).map((item:any) => ({
+            ...item,
+            manager: m.user,
+            referralCode: m.referralCode, // 👈 Thêm dòng này
+          })),
+        )
+      : manages.flatMap((m: any) =>
+          (m.requestStaff || [])
+            .filter((item: any) => item.status === selectedFilter)
+            .map((item: any) => ({
+              ...item,
+              manager: m.user,
+              referralCode: m.referralCode, // 👈 Thêm dòng này
+            })),
+        );
 
   useEffect(() => {
-    if (filteredRequests.length === 0) {
+    if (filteredItems.length === 0) {
       // Reset empty state animation
       emptyStateOpacity.setValue(0);
       emptyStateScale.setValue(0.8);
       // Start empty state animation
       setTimeout(animateEmptyState, 100);
     }
-  }, [filteredRequests.length]);
+  }, [filteredItems.length]);
 
   const menu = [
     {
       title: 'Tất cả',
       value: 'all',
-      count: referralRequests.length,
+      count: manages.length,
     },
     {
       title: 'Chờ duyệt',
@@ -335,6 +285,11 @@ const AwaitingModerationScreen = ({navigation}: any) => {
       setRefreshing(false);
     }, 1000);
   };
+  useFocusEffect(
+    useCallback(() => {
+      getManageInfo();
+    }, []),
+  );
   const AnimatedReferralCard = ({request, index}: any) => {
     const cardOpacity = useRef(new Animated.Value(0)).current;
     const cardTranslateY = useRef(new Animated.Value(30)).current;
@@ -370,7 +325,9 @@ const AwaitingModerationScreen = ({navigation}: any) => {
     );
   };
   const renderCardItems = ({item, index}: any) => {
-    return <AnimatedReferralCard key={item.id} request={item} index={index} />;
+    console.log(item, 111);
+
+    return <AnimatedReferralCard key={item._id} request={item} index={index} />;
   };
   return (
     <ContainerComponent styles={styles.container}>
@@ -394,7 +351,7 @@ const AwaitingModerationScreen = ({navigation}: any) => {
           styles={styles.headerTitle}
         />
         <TextComponent
-          label={`Tổng cộng ${referralRequests.length} mã đã gửi`}
+          label={`Tổng cộng ${manages?.length} mã đã gửi`}
           styles={styles.headerSubtitle}
         />
       </Animated.View>
@@ -428,8 +385,8 @@ const AwaitingModerationScreen = ({navigation}: any) => {
         <FlatList
           refreshing={refreshing}
           onRefresh={onRefresh}
-          data={filteredRequests}
-          keyExtractor={item => item.id}
+          data={filteredItems}
+          keyExtractor={item => item._id?.toString() || item.referralCode}
           renderItem={renderCardItems}
           style={{flex: 1}}
           showsVerticalScrollIndicator={false}
