@@ -21,9 +21,10 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Database connection middleware
 app.use(mongoMiddleware);
 app.get("/", (req, res) => {
-  res.json({
-    message: "Welcom to my app",
-  });
+  res.send("Welcome to FaceTrack API");
+});
+app.get("/hello", (req, res) => {
+  res.json("Welcome to FaceTrack API");
 });
 app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/auth", authRouter);
