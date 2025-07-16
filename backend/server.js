@@ -20,6 +20,11 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // upload các file tĩnh
 // Database connection middleware
 app.use(mongoMiddleware);
+app.get("/", (req, res) => {
+  res.json({
+    message: "Welcom to my app",
+  });
+});
 app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/face", faceRouter);
