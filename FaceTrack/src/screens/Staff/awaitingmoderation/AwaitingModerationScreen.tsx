@@ -325,7 +325,6 @@ const AwaitingModerationScreen = ({navigation}: any) => {
     );
   };
   const renderCardItems = ({item, index}: any) => {
-    console.log(item, 111);
 
     return <AnimatedReferralCard key={item._id} request={item} index={index} />;
   };

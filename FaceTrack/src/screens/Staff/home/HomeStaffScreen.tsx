@@ -203,7 +203,6 @@ const HomeStaffScreen = ({navigation}: any) => {
   }, []);
   
   const isLandscape = screenData.width > screenData.height;
-  console.log(user,12)
   const HeaderHome = () => {
     return (
       <RowComponent styles={{marginVertical: 12, paddingHorizontal: 16}}>

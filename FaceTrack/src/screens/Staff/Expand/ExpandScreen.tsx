@@ -1,24 +1,18 @@
+import { Category } from 'iconsax-react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
-  Platform,
-  StatusBar,
   StyleSheet,
-  Text,
-  View,
-  FlatList,
+  View
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
-import {categories, menu, MenuItem, menuUtils} from '../../data/data';
-import {ContainerComponent, TextComponent} from '../../../components/layout';
 import LinearGradient from 'react-native-linear-gradient';
+import { ContainerComponent, TextComponent } from '../../../components/layout';
 import HeaderComponent from '../../../components/layout/HeaderComponent';
-import {ArrowLeft2, Category} from 'iconsax-react-native';
-import {appSize} from '../../../constants/appSize';
-import appColors from '../../../constants/appColors';
+import { categories, menu, MenuItem, menuUtils } from '../../data/data';
 import CategoryFilter from './Component/CategoryFilter';
-import SearchComponent from './Component/SearchComponent';
 import EnhancedCardComponent from './Component/EnhancedCardComponent';
+import SearchComponent from './Component/SearchComponent';
 
 const ExpandScreen = ({navigation}: any) => {
   const [filteredMenu, setFilteredMenu] = useState<MenuItem[]>(menu);
@@ -273,7 +267,6 @@ export default ExpandScreen;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F8F9FA',
   },
   headerContainer: {
     zIndex: 1000,

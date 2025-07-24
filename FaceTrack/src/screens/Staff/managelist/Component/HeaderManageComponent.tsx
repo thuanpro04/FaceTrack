@@ -41,7 +41,7 @@ const HeaderManageComponent = (props: Props) => {
               }),
             },
           ],
-          maxHeight:'20%',
+          maxHeight: '20%',
         },
       ]}>
       <LinearGradient
@@ -49,7 +49,16 @@ const HeaderManageComponent = (props: Props) => {
         end={{x: 1, y: 1}}
         colors={['#667eea', '#764ba2', '#f093fb']}
         style={styles.header}>
-        <ButtonAnimation onPress={() => navigation.goBack()}>
+        <ButtonAnimation
+          onPress={() => navigation.goBack()}
+          styles={{
+            backgroundColor: appColors.card + '33',
+            width: 40,
+            height: 40,
+            borderRadius: 50,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
           <ArrowLeft2 size={appSize.iconLarge} color={appColors.white} />
         </ButtonAnimation>
         <SpaceComponent height={12} />

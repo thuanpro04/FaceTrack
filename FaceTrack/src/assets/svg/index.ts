@@ -7,6 +7,7 @@ import Profile from './Profile.svg';
 import Analytics from './Analytics.svg';
 import Notification from './Notification.svg';
 import Settings from './Settings.svg';
+import Iconsearch from './Iconsearch.png';
 export {
   Udraw,
   Staff,
@@ -17,4 +18,5 @@ export {
   Analytics,
   Settings,
   Notification,
+  Iconsearch,
 };

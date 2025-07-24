@@ -12,6 +12,7 @@ import {RowComponent, TextComponent} from '../../../../components/layout';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import appColors from '../../../../constants/appColors';
 import {formatDateToVn} from '../../../../utils/format';
+import ButtonAnimation from '../../../../components/layout/ButtonAnimation';
 interface Props {
   request: any;
 }
@@ -55,7 +56,7 @@ const ReferralCard = (props: Props) => {
         return 'Không xác định';
     }
   };
-  console.log('request: ', request);
+  const handleCancelRequestManager = async () => {};
 
   return (
     <View style={styles.card}>
@@ -166,12 +167,11 @@ const ReferralCard = (props: Props) => {
             </View>
           )}
 
-          <View style={styles.requestInfo}>
-            <TextComponent
-              label={`ID: ${request._id}`}
-              styles={styles.requestId}
-            />
-          </View>
+          <ButtonAnimation
+            styles={styles.requestInfo}
+            onPress={handleCancelRequestManager}>
+            <TextComponent label="Hủy yêu cầu" styles={styles.cancelRequest} />
+          </ButtonAnimation>
         </View>
       )}
     </View>
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#F2F2F7',
     paddingTop: 12,
   },
-  requestId: {
+  cancelRequest: {
     fontSize: 12,
     color: '#8E8E93',
     textAlign: 'center',

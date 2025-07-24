@@ -22,6 +22,7 @@ interface Props {
   onNavigationLabelRight?: () => void;
   textStyle?: StyleProp<TextStyle>;
   headerStyle?: StyleProp<ViewStyle>;
+  iconBtnStyle?: StyleProp<ViewStyle>;
 }
 const HeaderComponent = (props: Props) => {
   const {
@@ -32,12 +33,15 @@ const HeaderComponent = (props: Props) => {
     onNavigationLabelRight,
     headerStyle,
     textStyle,
+    iconBtnStyle,
   } = props;
   return (
     <RowComponent styles={[styles.topHeader, headerStyle]}>
-      <ButtonAnimation onPress={onNavigationIcon}>
+      <ButtonAnimation
+        onPress={onNavigationIcon}
+        styles={iconBtnStyle && styles.btn}>
         {(icon && icon) ?? (
-          <ArrowLeft2 size={appSize.iconLarge} color={appColors.iconDefault} />
+          <ArrowLeft size={appSize.iconLarge} color={appColors.iconDefault} />
         )}
       </ButtonAnimation>
       {label && (
@@ -64,10 +68,11 @@ export default HeaderComponent;
 const styles = StyleSheet.create({
   topHeader: {
     alignItems: 'center',
-    paddingVertical: 15,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
     marginBottom: 12,
+    paddingHorizontal: 12,
   },
   placeholder: {
     width: 40,
@@ -77,5 +82,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: appSize.title,
     fontWeight: '500',
+  },
+  btn: {
+    backgroundColor: appColors.gray + 'FC',
+    borderRadius: 50,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://192.168.1.2:2403'; // Replace with your backend URL
+export const BASE_URL = process.env.URL_FACETRACK; // Replace with your backend URL
 export const API_PATHS = {
   AUTH: {
     LOGIN: '/api/v1/auth/login',
@@ -15,5 +15,6 @@ export const API_PATHS = {
   },
   USER: {
     MANAGE_INFO: '/api/v1/me/manage',
+    CANCEL_MANAGE:'/api/v1/me/cancel'
   },
 };

@@ -202,15 +202,17 @@ const AttendanceHistoryScreen = ({navigation}: any) => {
         textStyle={styles.textHeader}
       />
 
-      <FlatList
-        onRefresh={onRefresh}
-        refreshing={refreshing}
-        data={attendanceHistoryData}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={{paddingBottom: 24}}
-        showsVerticalScrollIndicator={false}
-      />
+      <View style={styles.main}>
+        <FlatList
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+          data={attendanceHistoryData}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={{paddingBottom: 24}}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
     </ContainerComponent>
   );
 };
@@ -218,7 +220,9 @@ const AttendanceHistoryScreen = ({navigation}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginHorizontal: 16,
+  },
+  main: {
+    paddingHorizontal: 12,
   },
   textHeader: {
     fontSize: 24,
