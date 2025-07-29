@@ -1,5 +1,5 @@
 import {FlatList, Image, StyleSheet, Text, TextInput, View} from 'react-native';
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   ContainerComponent,
   RowComponent,
@@ -12,113 +12,87 @@ import {appSize} from '../../../constants/appSize';
 import appColors from '../../../constants/appColors';
 import ButtonAnimation from '../../../components/layout/ButtonAnimation';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import {useFocusEffect} from '@react-navigation/native';
+import {userServices} from '../../../services/userServices';
+import {infoBase} from '../../data/user.type';
+import InformationUserModal from '../../modals/InformationUserModal';
+// Lọc các nhân viên thuộc mình quản lý
 const AddEmployeeScreen = ({navigation}: any) => {
   const [text, setText] = useState('');
-  const mockGlobalUsers = [
-    {
-      id: 'user001',
-      name: 'Nguyễn Thị Mai',
-      email: 'mai@email.com',
-      phone: '0901111111',
-      avatar: null,
-      skills: ['Pha chế', 'Latte Art'],
-      experience: '2 năm',
-      location: 'Quận 1, TP.HCM',
-      rating: 4.8,
-      totalWorkplaces: 3,
-      lastActive: '2 giờ trước',
-      isAvailable: true,
-      bio: 'Có kinh nghiệm làm việc tại các quán cafe specialty',
-      currentStatus: 'Đang tìm việc',
-      joinedDate: '15/03/2024',
-      isInMyTeam: false,
-      isInvited: false,
-      imageProfileUrl:
-        'https://scontent.fvca1-1.fna.fbcdn.net/v/t39.30808-6/476495506_2211057015955753_5540347483900267937_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGDaqITdPq-fI4Isz_eH5dM40srH4O6GC_jSysfg7oYLyqKLHKs80OS8Z5yWQHVMIIeYfHnHLGNS3Ky9ItajG7D&_nc_ohc=G8CSQwJ_ilIQ7kNvwEphApK&_nc_oc=Adl6iAFM6lyFW_BnMUkvwFgsMqPEViBV0YlBaHFPvWAtn0wDyetU6QP5vCaR_XGEi2up_cvWJLdzr3NhZh47iGJV&_nc_zt=23&_nc_ht=scontent.fvca1-1.fna&_nc_gid=vyZ4ACRLVEj47eiBuBgyUA&oh=00_AfQ4sE1WJ3wxX9roLXlpbMv2yMpg1BgQT_UomzA90s4pOQ&oe=6887EC33',
-    },
-    {
-      id: 'user002',
-      name: 'Trần Văn Hùng',
-      email: 'hung@email.com',
-      phone: '0902222222',
-      avatar: null,
-      skills: ['Phục vụ', 'Thu ngân', 'Quản lý'],
-      experience: '3 năm',
-      location: 'Quận 3, TP.HCM',
-      rating: 4.9,
-      totalWorkplaces: 5,
-      lastActive: '1 ngày trước',
-      isAvailable: false,
-      bio: 'Trưởng ca tại nhiều nhà hàng lớn',
-      currentStatus: 'Đang làm việc',
-      joinedDate: '10/01/2024',
-      isInMyTeam: false,
-      isInvited: true,
-      imageProfileUrl:
-        'https://scontent.fvca1-1.fna.fbcdn.net/v/t39.30808-6/476495506_2211057015955753_5540347483900267937_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGDaqITdPq-fI4Isz_eH5dM40srH4O6GC_jSysfg7oYLyqKLHKs80OS8Z5yWQHVMIIeYfHnHLGNS3Ky9ItajG7D&_nc_ohc=G8CSQwJ_ilIQ7kNvwEphApK&_nc_oc=Adl6iAFM6lyFW_BnMUkvwFgsMqPEViBV0YlBaHFPvWAtn0wDyetU6QP5vCaR_XGEi2up_cvWJLdzr3NhZh47iGJV&_nc_zt=23&_nc_ht=scontent.fvca1-1.fna&_nc_gid=vyZ4ACRLVEj47eiBuBgyUA&oh=00_AfQ4sE1WJ3wxX9roLXlpbMv2yMpg1BgQT_UomzA90s4pOQ&oe=6887EC33',
-    },
-    {
-      id: 'user003',
-      name: 'Lê Thị Hoa',
-      email: 'hoa@email.com',
-      phone: '0903333333',
-      avatar: null,
-      skills: ['Bếp', 'Pha chế', 'Trang trí'],
-      experience: '1.5 năm',
-      location: 'Quận 7, TP.HCM',
-      rating: 4.6,
-      totalWorkplaces: 2,
-      lastActive: '30 phút trước',
-      isAvailable: true,
-      bio: 'Chuyên về đồ uống và bánh ngọt',
-      currentStatus: 'Sẵn sàng làm thêm',
-      joinedDate: '20/02/2024',
-      isInMyTeam: true,
-      isInvited: false,
-      imageProfileUrl:
-        'https://scontent.fvca1-1.fna.fbcdn.net/v/t39.30808-6/476495506_2211057015955753_5540347483900267937_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGDaqITdPq-fI4Isz_eH5dM40srH4O6GC_jSysfg7oYLyqKLHKs80OS8Z5yWQHVMIIeYfHnHLGNS3Ky9ItajG7D&_nc_ohc=G8CSQwJ_ilIQ7kNvwEphApK&_nc_oc=Adl6iAFM6lyFW_BnMUkvwFgsMqPEViBV0YlBaHFPvWAtn0wDyetU6QP5vCaR_XGEi2up_cvWJLdzr3NhZh47iGJV&_nc_zt=23&_nc_ht=scontent.fvca1-1.fna&_nc_gid=vyZ4ACRLVEj47eiBuBgyUA&oh=00_AfQ4sE1WJ3wxX9roLXlpbMv2yMpg1BgQT_UomzA90s4pOQ&oe=6887EC33',
-    },
-    {
-      id: 'user004',
-      name: 'Phạm Minh Đức',
-      email: 'duc@email.com',
-      phone: '0904444444',
-      avatar: null,
-      skills: ['Delivery', 'Phục vụ'],
-      experience: '6 tháng',
-      location: 'Quận 5, TP.HCM',
-      rating: 4.3,
-      totalWorkplaces: 1,
-      lastActive: '5 giờ trước',
-      isAvailable: true,
-      bio: 'Sinh viên part-time, sẵn sàng làm ca tối',
-      currentStatus: 'Đang tìm việc',
-      joinedDate: '05/04/2024',
-      isInMyTeam: false,
-      isInvited: false,
-      imageProfileUrl:
-        'https://scontent.fvca1-1.fna.fbcdn.net/v/t39.30808-6/476495506_2211057015955753_5540347483900267937_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGDaqITdPq-fI4Isz_eH5dM40srH4O6GC_jSysfg7oYLyqKLHKs80OS8Z5yWQHVMIIeYfHnHLGNS3Ky9ItajG7D&_nc_ohc=G8CSQwJ_ilIQ7kNvwEphApK&_nc_oc=Adl6iAFM6lyFW_BnMUkvwFgsMqPEViBV0YlBaHFPvWAtn0wDyetU6QP5vCaR_XGEi2up_cvWJLdzr3NhZh47iGJV&_nc_zt=23&_nc_ht=scontent.fvca1-1.fna&_nc_gid=vyZ4ACRLVEj47eiBuBgyUA&oh=00_AfQ4sE1WJ3wxX9roLXlpbMv2yMpg1BgQT_UomzA90s4pOQ&oe=6887EC33',
-    },
-  ];
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>({});
+  const [filteredStaffs, setFilteredStaffs] = useState<infoBase[]>([]);
+  const [isVisibleInfoModal, setIsVisibleInfoModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [staffs, setStaffs] = useState<infoBase[]>([]);
+  const getStaffInfo = async () => {
+    try {
+      setIsLoading(true);
+      const res = await userServices.getStaffInfo(10);
+      if (res && res.data?.staffs) {
+        console.log('Get staff info successfully: ', res.data.staffs);
+        setStaffs(res.data.staffs);
+        setFilteredStaffs(res.data.staffs);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.log('Get staff info error: ', error);
+      setIsLoading(false);
+    }
+  };
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+  useFocusEffect(
+    useCallback(() => {
+      getStaffInfo();
+    }, []),
+  );
+  useEffect(() => {
+    searchByName();
+  }, [text]);
+  const searchByName = () => {
+    const keyWord = text.toLocaleLowerCase().trim();
+    if (!keyWord) {
+      setFilteredStaffs(staffs);
+      return;
+    }
+    const result = staffs.filter(staff =>
+      staff.fullName?.toLocaleLowerCase().includes(keyWord),
+    );
+    setFilteredStaffs(result);
+  };
+  const onpPenInfoModal = (user: infoBase) => {
+    setIsVisibleInfoModal(true);
+    setSelectedUser(user);
+  };
+  const onCloseInfoModal = () => {
+    setIsVisibleInfoModal(false);
+  };
+
   const renderItem = ({item, index}: any) => {
-    const skills = item.skills.splice(0, 2);
+    const skills = item.staff.skills.slice(0, 2);
     const moreSkill = skills.length > 1;
+
     return (
       <View style={styles.cardContainer}>
         <RowComponent styles={styles.cardRow}>
-          {!item.imageProfileUrl ? (
-            <Image source={{uri: item.imageProfileUrl}} style={styles.avatar} />
+          {item.profileImageUrl ? (
+            <Image source={{uri: item.profileImageUrl}} style={styles.avatar} />
           ) : (
             <View style={styles.avatar}>
               <TextComponent
-                label={item.name.split('')[0]}
+                label={item.fullName.split('')[0]}
                 color={appColors.white}
               />
             </View>
           )}
           <View style={styles.cardContent}>
             <RowComponent>
-              <TextComponent styles={styles.name} label={item.name} />
+              <TextComponent styles={styles.name} label={item.fullName} />
               <RowComponent styles={styles.ratingRow}>
                 <AntDesign
                   name="star"
@@ -126,7 +100,7 @@ const AddEmployeeScreen = ({navigation}: any) => {
                   size={appSize.iconSmall}
                 />
                 <TextComponent
-                  label={`${item.rating}`}
+                  label={`${item.staff.rating}`}
                   styles={styles.labelRating}
                 />
               </RowComponent>
@@ -150,11 +124,11 @@ const AddEmployeeScreen = ({navigation}: any) => {
             <RowComponent>
               <TextComponent
                 styles={[styles.address, {flex: 1}]}
-                label={`Kinh nghiệm: ${item.experience}`}
+                label={`Kinh nghiệm: ${item.staff.experience}`}
               />
               <TextComponent
                 styles={styles.address}
-                label={`${item.totalWorkplaces} nơi làm việc`}
+                label={`${item.staff.totalWorkplaces} nơi làm việc`}
               />
             </RowComponent>
           </View>
@@ -163,13 +137,13 @@ const AddEmployeeScreen = ({navigation}: any) => {
         <RowComponent styles={{justifyContent: 'space-around'}}>
           <View style={styles.statusCard}>
             <TextComponent
-              label={item.currentStatus}
+              label={item.staff.currentStatus ?? 'Đang làm việc'}
               styles={styles.labelStatus}
             />
           </View>
           <View style={{justifyContent: 'center'}}>
             <TextComponent
-              label={`Hoạt động: ${item.lastActive}`}
+              label={`Hoạt động: ${item.status}`}
               styles={[
                 styles.address,
                 {
@@ -180,10 +154,12 @@ const AddEmployeeScreen = ({navigation}: any) => {
           </View>
         </RowComponent>
         <SpaceComponent height={12} />
-        <TextComponent label={item.bio} styles={styles.bio} />
+        <TextComponent label={item.staff.bio} styles={styles.bio} />
         <SpaceComponent height={22} />
         <RowComponent styles={styles.btnActiviteRow}>
-          <ButtonAnimation styles={styles.btnActivite} onPress={() => {}}>
+          <ButtonAnimation
+            styles={styles.btnActivite}
+            onPress={() => onpPenInfoModal(item)}>
             <TextComponent label="Xem hồ sơ" styles={styles.btnActiviteLabel} />
           </ButtonAnimation>
           <ButtonAnimation
@@ -238,7 +214,7 @@ const AddEmployeeScreen = ({navigation}: any) => {
         <View style={styles.body}>
           <RowComponent>
             <TextComponent
-              label="Tìm thấy 2 người"
+              label={`Tìm thấy ${filteredStaffs.length} người`}
               styles={styles.labelResult}
             />
             <ButtonAnimation onPress={() => {}} styles={{}}>
@@ -250,14 +226,22 @@ const AddEmployeeScreen = ({navigation}: any) => {
           </RowComponent>
           <SpaceComponent height={12} />
           <FlatList
-            data={mockGlobalUsers}
-            keyExtractor={item => item.id}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            showsVerticalScrollIndicator={false}
+            data={filteredStaffs}
+            keyExtractor={item => item._id}
             renderItem={renderItem}
             style={{}}
             ListFooterComponent={() => <SpaceComponent height={100} />}
           />
         </View>
       </View>
+      <InformationUserModal
+        visible={isVisibleInfoModal}
+        onClose={onCloseInfoModal}
+        user={selectedUser}
+      />
     </ContainerComponent>
   );
 };

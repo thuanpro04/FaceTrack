@@ -29,16 +29,16 @@ import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {showNotificating} from '../../../utils/ShowNotification';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LoadingModal from '../../modals/LoadingModal';
 
 const {width: screenWidth} = Dimensions.get('window');
 const CONTAINER_PADDING = 16;
-const CARD_MARGIN = 12;
 
 const HomeManageScreen = ({navigation}: any) => {
   const [isCLoseNotifi, setIsCLoseNotifi] = useState(false);
   const auth = useSelector(authSelector);
   const dispath = useDispatch();
-
+  const [isLoading, setIsLoading] = useState(false);
   const copyToClipboard = (code: string) => {
     Clipboard.setString(code);
     ToastAndroid.showWithGravity(
@@ -48,8 +48,10 @@ const HomeManageScreen = ({navigation}: any) => {
     );
   };
   const handleLogout = async () => {
+    setIsLoading(true);
     await AsyncStorage.removeItem('user');
     dispath(removeAuth());
+    setIsLoading(false);
     navigation.navigate('auth');
   };
   const HeaderManageComponent = () => {
@@ -443,6 +445,7 @@ const HomeManageScreen = ({navigation}: any) => {
           <SpaceComponent height={24} />
         </View>
       </ScrollView>
+      <LoadingModal isVisible={isLoading} />
     </ContainerComponent>
   );
 };

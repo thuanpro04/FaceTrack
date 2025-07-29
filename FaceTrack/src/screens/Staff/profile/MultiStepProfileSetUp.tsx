@@ -31,25 +31,9 @@ import {showNotificating} from '../../../utils/ShowNotification';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {authServices} from '../../../services/authServices';
 import LoadingModal from '../../modals/LoadingModal';
+import {infoBase} from '../../data/user.type';
 
 const {width, height} = Dimensions.get('window');
-
-export interface infoBase {
-  profileImageUrl?: string;
-  fullName?: string;
-  phone: string;
-  location: string;
-  gender?: 'nam' | 'nữ' | 'khác';
-  birthDay: String | null | Date;
-  staff: infoAdvanced;
-}
-
-export interface infoAdvanced {
-  totalWorkplaces: number;
-  bio: string;
-  experience: number;
-  skills: string[];
-}
 
 const MultiStepProfileSetUp = ({navigation}: any) => {
   const [step, setStep] = useState(0);
@@ -63,8 +47,9 @@ const MultiStepProfileSetUp = ({navigation}: any) => {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const dispatch = useDispatch();
+  const dispatch = useDispatch();  
   const [user, setUser] = useState<infoBase>({
+    _id: profile._id,
     fullName: profile.fullName,
     phone: profile.phone,
     location: profile.location,

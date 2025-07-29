@@ -252,11 +252,11 @@ exports.upload_Profile = async (req, res) => {
     }
     if (!existingStaffInfo && userData.staff) {
       await Staff.create({
+        user: userData.id,
         experience: userData.staff.experience,
         skills: userData.staff.skills,
         totalWorkplaces: userData.staff.totalWorkplaces,
         bio: userData.staff.bio,
-        location: userData.staff.location,
       });
     } else if (userData.staff) {
       await Staff.findOneAndUpdate(
@@ -266,7 +266,6 @@ exports.upload_Profile = async (req, res) => {
           skills: userData.staff.skills,
           totalWorkplaces: userData.staff.totalWorkplaces,
           bio: userData.staff.bio,
-          location: userData.staff.location,
         }
       );
     }

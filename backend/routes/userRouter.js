@@ -1,5 +1,4 @@
 const express = require("express");
-const { getManageInfo } = require("../controllers/userController");
-const userRouter = express();
-userRouter.get('/manage/:id',getManageInfo)
+const userRouter = express.Router();
+
 module.exports = userRouter;

@@ -4,12 +4,12 @@ const User = require("./User");
 const staffSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
+    required: true,
     ref: "User",
   },
   experience: { type: String, default: null },
-  rating: { type: Number, default: 0 },
+  rating: { type: Number, default: 5 },
   currentStatus: { type: String, default: null },
-  location: { type: String, default: null },
   skills: [
     {
       type: String,

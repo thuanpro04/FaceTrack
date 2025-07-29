@@ -7,6 +7,8 @@ const authRouter = require("./routes/AuthRouter");
 const faceRouter = require("./routes/faceRouter");
 const { mongoMiddleware } = require("./middlewares/mongoMiddleware");
 const userRouter = require("./routes/userRouter");
+const manageRouter = require("./routes/manageRouter");
+const staffRouter = require("./routes/staffRouter");
 const PORT = process.env.PORT || 2403;
 app.use(
   cors({
@@ -24,6 +26,9 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/face", faceRouter);
 app.use("/api/v1/me", userRouter);
+app.use("/api/v1/manage", manageRouter);
+app.use("/api/v1/staff", staffRouter);
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

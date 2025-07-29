@@ -8,7 +8,7 @@ export interface Manager {
   projects: number;
   rating: number;
 }
- type AttendanceStatus = 'present' | 'weekend' | 'absent' | 'late' | 'overtime';
+type AttendanceStatus = 'present' | 'weekend' | 'absent' | 'late' | 'overtime';
 
 interface UserInfo {
   id: string;
@@ -85,4 +85,22 @@ export interface MockUserData {
   monthlyData: MonthlyData;
   yearlyData: YearlyData;
   recentAttendance: AttendanceRecord[];
+}
+
+export interface infoBase {
+  _id: string;
+  profileImageUrl?: string;
+  fullName?: string;
+  phone: string;
+  location: string;
+  gender?: 'nam' | 'nữ' | 'khác';
+  birthDay: String | null | Date;
+  staff: infoAdvanced;
+}
+
+export interface infoAdvanced {
+  totalWorkplaces: number;
+  bio: string;
+  experience: number;
+  skills: string[];
 }

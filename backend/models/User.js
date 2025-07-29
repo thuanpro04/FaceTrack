@@ -7,9 +7,10 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true },
     password: { type: String, required: true },
     phone: { type: Number, default: null },
+    location: { type: String, default: null },
     profileImageUrl: { type: String, default: null },
     lockUntil: { type: Date },
-    birthDay: { type: String },
+    birthDay: { type: String, default: null },
     role: {
       type: String,
       enum: ["staff", "manage", "admin"],
