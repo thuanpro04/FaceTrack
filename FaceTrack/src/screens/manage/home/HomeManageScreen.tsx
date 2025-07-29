@@ -16,8 +16,8 @@ import {
   SpaceComponent,
   TextComponent,
 } from '../../../components/layout';
-import {useSelector} from 'react-redux';
-import {authSelector} from '../../../redux/slices/authSlice';
+import {useDispatch, useSelector} from 'react-redux';
+import {authSelector, removeAuth} from '../../../redux/slices/authSlice';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import {appSize} from '../../../constants/appSize';
 import appColors from '../../../constants/appColors';
@@ -28,6 +28,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {showNotificating} from '../../../utils/ShowNotification';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {width: screenWidth} = Dimensions.get('window');
 const CONTAINER_PADDING = 16;
@@ -36,6 +37,8 @@ const CARD_MARGIN = 12;
 const HomeManageScreen = ({navigation}: any) => {
   const [isCLoseNotifi, setIsCLoseNotifi] = useState(false);
   const auth = useSelector(authSelector);
+  const dispath = useDispatch();
+
   const copyToClipboard = (code: string) => {
     Clipboard.setString(code);
     ToastAndroid.showWithGravity(
@@ -43,6 +46,11 @@ const HomeManageScreen = ({navigation}: any) => {
       ToastAndroid.SHORT,
       ToastAndroid.BOTTOM,
     );
+  };
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('user');
+    dispath(removeAuth());
+    navigation.navigate('auth');
   };
   const HeaderManageComponent = () => {
     return (
@@ -60,24 +68,13 @@ const HomeManageScreen = ({navigation}: any) => {
               />
             </TouchableOpacity>
           </View>
-          {auth.profileImageUrl ? (
-            <ButtonAnimation
-              onPress={() => console.log('ZOom')}
-              styles={styles.btnImage}>
-              <Image
-                style={styles.avatar}
-                source={{uri: auth.profileImageUrl}}
-              />
-            </ButtonAnimation>
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <EvilIcons
-                name="user"
-                size={appSize.iconLarge}
-                color={appColors.iconDefault}
-              />
-            </View>
-          )}
+          <ButtonAnimation onPress={handleLogout}>
+            <MaterialIcons
+              name="logout"
+              size={appSize.iconMedium}
+              color={appColors.iconDefault}
+            />
+          </ButtonAnimation>
         </RowComponent>
       </View>
     );

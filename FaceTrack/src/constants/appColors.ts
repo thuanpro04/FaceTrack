@@ -1,7 +1,7 @@
 const appColors = {
   primary: "#0066FF",
   secondary: "#00C897",
-  background: "#F4F7FC",
+  background: "#F8F9FA",
   card: "#FFFFFF",
   text: "#1E1E1E",
   textSecondary: "#4F4F4F",

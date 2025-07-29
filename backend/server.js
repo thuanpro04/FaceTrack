@@ -20,17 +20,11 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // upload các file tĩnh
 // Database connection middleware
 app.use(mongoMiddleware);
-app.get("/", (req, res) => {
-  res.send("Welcome to FaceTrack API");
-});
-app.get("/hello", (req, res) => {
-  res.json("Welcome to FaceTrack API");
-});
 app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/face", faceRouter);
 app.use("/api/v1/me", userRouter);
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+// module.exports = app;

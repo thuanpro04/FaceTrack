@@ -11,6 +11,7 @@ import {
 import React, {ReactNode} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import appColors from '../../constants/appColors';
 
 interface Props {
   children: ReactNode;
@@ -55,6 +56,6 @@ export default ContainerComponent;
 const locaStyle = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:'#F8F9FA'
+    backgroundColor: appColors.background,
   },
 });

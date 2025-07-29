@@ -6,11 +6,22 @@ const staffSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
+  experience: { type: String, default: null },
+  rating: { type: Number, default: 0 },
+  currentStatus: { type: String, default: null },
+  location: { type: String, default: null },
+  skills: [
+    {
+      type: String,
+      default: null,
+    },
+  ],
+  bio: { type: String, default: null },
+  totalWorkplaces: { type: Number, default: 0 },
   manageBy: {
     manageId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Manage",
-      required: true,
     },
     joinedAt: {
       type: Date,

@@ -25,7 +25,7 @@ exports.getManageInfoReferred = async (code) => {
       path: "user",
       select: "fullName email phone profileImageUrl status role",
     })
-    .select("referralCode requestStaff origanizations ")
+    .select("referralCode requestStaff origanizations ");
 };
 exports.registerUser = async (req, res) => {
   const { fullName, email, password, role } = req.body;
@@ -219,25 +219,61 @@ exports.getUserById = async (id) => {
   return await User.findById(id);
 };
 exports.upload_Profile = async (req, res) => {
-  const user = req.body;
+  const userData = req.body;
+  console.log("Upload profile user: ", userData);
   try {
-    const existingUser = await this.getUserById(user.id);
+    const existingUser = await this.getUserById(userData.id);
     if (!existingUser) {
       return res.status(404).json({
         message: "User not found !!",
       });
     }
-    const result = await User.findByIdAndUpdate(user.id, user, {
-      new: true, // Trả về document sau khi update (default: false)
-      runValidators: true, // Chạy validation trước khi update
-      select: "fullName email phone profileImageUrl status role",
-      select: "-password",
-    });
-    console.log("Update success: ", result);
+    const existingStaffInfo = await Staff.findOne({ user: userData.id });
+    const updatedUser = await User.findByIdAndUpdate(
+      userData.id,
+      {
+        fullName: userData.fullName,
+        phone: userData.phone,
+        birthDay: userData.birthDay,
+        gender: userData.gender,
+        location: userData.location,
+        profileImageUrl: userData.profileImageUrl,
+      },
+      {
+        new: true,
+        runValidators: true,
+        select: "-password",
+        select: "fullName email phone profileImageUrl status role",
+      } // Trả về document sau khi update và chạy validation
+    );
 
-    res.status(201).json({
-      message: "Update user info success !!!",
-      result,
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+    if (!existingStaffInfo && userData.staff) {
+      await Staff.create({
+        experience: userData.staff.experience,
+        skills: userData.staff.skills,
+        totalWorkplaces: userData.staff.totalWorkplaces,
+        bio: userData.staff.bio,
+        location: userData.staff.location,
+      });
+    } else if (userData.staff) {
+      await Staff.findOneAndUpdate(
+        { user: userData.id },
+        {
+          experience: userData.staff.experience,
+          skills: userData.staff.skills,
+          totalWorkplaces: userData.staff.totalWorkplaces,
+          bio: userData.staff.bio,
+          location: userData.staff.location,
+        }
+      );
+    }
+    console.log("Upload profile success: ", updatedUser);
+    res.status(200).json({
+      message: "Cập nhật thông tin người dùng thành công!",
+      result: updatedUser,
     });
   } catch (error) {
     console.log("Upload profile error: ", error);
