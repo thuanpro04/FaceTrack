@@ -1,5 +1,7 @@
 const Staff = require("../models/Staff");
+const NotificationInvite = require("../models/NotificationInvite");
 const { getUserById, getManageInfoReferred } = require("./AuthController");
+const Manage = require("../models/Manage");
 exports.getStaffInfo = async (req, res) => {
   const { limit } = req.params;
 
@@ -48,3 +50,4 @@ exports.getStaffInfo = async (req, res) => {
     });
   }
 };
+

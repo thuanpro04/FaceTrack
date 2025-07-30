@@ -1,21 +1,25 @@
-import {FlatList, Image, StyleSheet, Text, TextInput, View} from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
+import {SearchFavorite1} from 'iconsax-react-native';
 import React, {useCallback, useEffect, useState} from 'react';
+import {FlatList, Image, StyleSheet, TextInput, View} from 'react-native';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import {
   ContainerComponent,
   RowComponent,
   SpaceComponent,
   TextComponent,
 } from '../../../components/layout';
-import HeaderComponent from '../../../components/layout/HeaderComponent';
-import {ArrowLeft, SearchFavorite1} from 'iconsax-react-native';
-import {appSize} from '../../../constants/appSize';
-import appColors from '../../../constants/appColors';
 import ButtonAnimation from '../../../components/layout/ButtonAnimation';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import {useFocusEffect} from '@react-navigation/native';
-import {userServices} from '../../../services/userServices';
+import HeaderComponent from '../../../components/layout/HeaderComponent';
+import appColors from '../../../constants/appColors';
+import {appSize} from '../../../constants/appSize';
+import {manageServices} from '../../../services/manageServices';
 import {infoBase} from '../../data/user.type';
 import InformationUserModal from '../../modals/InformationUserModal';
+import LoadingModal from '../../modals/LoadingModal';
+import {useSelector} from 'react-redux';
+import {authSelector} from '../../../redux/slices/authSlice';
+import {showNotificating} from '../../../utils/ShowNotification';
 // Lọc các nhân viên thuộc mình quản lý
 const AddEmployeeScreen = ({navigation}: any) => {
   const [text, setText] = useState('');
@@ -25,10 +29,11 @@ const AddEmployeeScreen = ({navigation}: any) => {
   const [isVisibleInfoModal, setIsVisibleInfoModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [staffs, setStaffs] = useState<infoBase[]>([]);
+  const user = useSelector(authSelector);
   const getStaffInfo = async () => {
     try {
       setIsLoading(true);
-      const res = await userServices.getStaffInfo(10);
+      const res = await manageServices.getStaffInfo(10);
       if (res && res.data?.staffs) {
         console.log('Get staff info successfully: ', res.data.staffs);
         setStaffs(res.data.staffs);
@@ -42,7 +47,8 @@ const AddEmployeeScreen = ({navigation}: any) => {
   };
   const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => {
+    setTimeout(async () => {
+      await getStaffInfo();
       setRefreshing(false);
     }, 1000);
   };
@@ -72,10 +78,30 @@ const AddEmployeeScreen = ({navigation}: any) => {
   const onCloseInfoModal = () => {
     setIsVisibleInfoModal(false);
   };
+  const handleInviteUserToGroup = async (userId: string, fullName: string) => {
+    try {
+      setIsLoading(true);
+      const res = await manageServices.handleInviteUserToGroup({
+        id: user._id,
+        userId,
+      });
+      if (res && res.data) {
+        console.log(res.data.message);
+        showNotificating.activity(
+          'success',
+          'Đã mời thành viên',
+          `Bạn đã mời ${fullName} tham gia nhóm.`,
+        );
 
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.log('Invite user to group error: ', error);
+      setIsLoading(false);
+    }
+  };
   const renderItem = ({item, index}: any) => {
     const skills = item.staff.skills.slice(0, 2);
-    const moreSkill = skills.length > 1;
 
     return (
       <View style={styles.cardContainer}>
@@ -163,7 +189,8 @@ const AddEmployeeScreen = ({navigation}: any) => {
             <TextComponent label="Xem hồ sơ" styles={styles.btnActiviteLabel} />
           </ButtonAnimation>
           <ButtonAnimation
-            onPress={() => {}}
+            disabled={isLoading}
+            onPress={() => handleInviteUserToGroup(item._id, item.fullName)}
             styles={[
               styles.btnActivite,
               {backgroundColor: appColors.primary + 'E6'},
@@ -242,6 +269,7 @@ const AddEmployeeScreen = ({navigation}: any) => {
         onClose={onCloseInfoModal}
         user={selectedUser}
       />
+      <LoadingModal isVisible={isLoading} />
     </ContainerComponent>
   );
 };

@@ -1,6 +1,6 @@
-import {useFocusEffect} from '@react-navigation/native';
-import {ArrowLeft2} from 'iconsax-react-native';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { ArrowLeft2 } from 'iconsax-react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   ContainerComponent,
   SpaceComponent,
@@ -17,9 +17,9 @@ import {
 } from '../../../components/layout';
 import ButtonAnimation from '../../../components/layout/ButtonAnimation';
 import appColors from '../../../constants/appColors';
-import {appSize} from '../../../constants/appSize';
-import {authSelector} from '../../../redux/slices/authSlice';
-import {userServices} from '../../../services/userServices';
+import { appSize } from '../../../constants/appSize';
+import { authSelector } from '../../../redux/slices/authSlice';
+import { staffServices } from '../../../services/staffServices';
 import ReferralCard from './Component/ReferralCard';
 
 export interface Manager {
@@ -73,7 +73,7 @@ const AwaitingModerationScreen = ({navigation}: any) => {
   const getManageInfo = async () => {
     try {
       setIsLoading(true);
-      const res = await userServices.getManageInfo(user._id);
+      const res = await staffServices.getManageInfo(user._id);
       if (res && res.data) {
         console.log(`${res.data.message}`, res.data.manageInfo);
         setManages(res.data.manageInfo);

@@ -1,11 +1,14 @@
+const Manage = require("../models/Manage");
+const NotificationInvite = require("../models/NotificationInvite");
 const Staff = require("../models/Staff");
+const User = require("../models/User");
 const { getUserById, getManageInfoReferred } = require("./AuthController");
 exports.getStaffInfo = async (req, res) => {
   const { limit } = req.params;
 
   if (!limit) {
     return res.status(400).json({
-      message: "Missing required fields: id",
+      message: "Missing required fields: limit",
     });
   }
   try {
@@ -45,6 +48,45 @@ exports.getStaffInfo = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: "get staff info server error",
+    });
+  }
+};
+exports.handleInviteToGroup = async (req, res) => {
+  const { id, userId } = req.body;
+  try {
+    if (!id || !userId) {
+      return res.status(400).json({
+        message: "Missing required fields: id && userId",
+      });
+    }
+    const manage = await User.findById(id).select("fullName");
+    if (!manage) {
+      return res.status(404).json({
+        message: "Manage not found !!!",
+      });
+    }
+    const existingNoti = await NotificationInvite.findOne({
+      sender: id,
+      receiver: userId,
+    });
+    if (existingNoti) {
+      return res.status(200).json({
+        message: "You have already sent the invitation.",
+      });
+    }
+    await NotificationInvite.create({
+      sender: id,
+      receiver: userId,
+      content: `Bạn được mời vào nhóm bởi quản lý ${manage.fullName}`,
+    });
+    console.log("Invite user to group successfully");
+
+    res.status(200).json({
+      message: "Invite user to group successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: `Invite user to group server error: ${error}`,
     });
   }
 };

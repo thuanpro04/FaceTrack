@@ -216,7 +216,7 @@ exports.getUserInfo = async (req, res) => {
 };
 
 exports.getUserById = async (id) => {
-  return await User.findById(id);
+  return await User.findById(id).select("-password");
 };
 exports.upload_Profile = async (req, res) => {
   const userData = req.body;

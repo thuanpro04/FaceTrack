@@ -1,3 +1,4 @@
+const NotificationInvite = require("../models/NotificationInvite");
 const Staff = require("../models/Staff");
 const { getUserById, getManageInfoReferred } = require("./AuthController");
 
@@ -29,6 +30,47 @@ exports.getManageInfo = async (req, res) => {
     console.log("get manage info error: ", error);
     return res.status(500).json({
       message: "get manage server error",
+    });
+  }
+};
+exports.getNotificationInviteToTeam = async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (!id) {
+      return res.status(400).json({
+        message: "Missing required field id",
+      });
+    }
+    const notifications = await NotificationInvite.find({
+      receiver: id,
+    });
+
+    if (notifications.length < 1) {
+      return res.status(200).json({ result: [], message: "No invites found" });
+    }
+
+    const manageInfo = notifications.map(async (item) => {
+      const userInfo = await getUserById(item.sender);
+      return {
+        notifications: item,
+        manages: {
+          fullName: userInfo.fullName,
+          profileImageUrl: userInfo.profileImageUrl,
+          phone: userInfo.phone,
+          email: userInfo.email,
+          gender: userInfo.gender,
+        },
+      };
+    });
+    const manages = await Promise.all(manageInfo);
+
+    res.status(200).json({
+      message: "Get notification invite successfully !!",
+      result: manages,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: `Server get invite to team error: ${error}`,
     });
   }
 };

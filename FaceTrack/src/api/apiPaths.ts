@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://192.168.1.11:2403'; // Replace with your backend URL
+export const BASE_URL = 'http://192.168.1.3:2403'; // Replace with your backend URL
 export const API_PATHS = {
   AUTH: {
     LOGIN: '/api/v1/auth/login',
@@ -16,7 +16,8 @@ export const API_PATHS = {
   USER: {},
   STAFF: {
     MANAGE_INFO: '/api/v1/staff/info',
-    CANCEL_MANAGE: '/api/v1/me/cancel',
+    CANCEL_MANAGE: '/api/v1/staff/cancel',
+    NOTIFICATION_INVITE:'/api/v1/staff/invite'
   },
   MANAGE: {
     STAFF_INFO: '/api/v1/manage/info',

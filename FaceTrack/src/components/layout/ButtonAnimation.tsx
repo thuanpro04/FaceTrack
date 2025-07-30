@@ -14,9 +14,10 @@ interface Props {
   children: ReactNode;
   onPress: () => void;
   activeOpacity?: number;
+  disabled?: boolean;
 }
 const ButtonAnimation = (props: Props) => {
-  const {styles, children, onPress, activeOpacity} = props;
+  const {styles, children, onPress, activeOpacity, disabled} = props;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
@@ -33,13 +34,14 @@ const ButtonAnimation = (props: Props) => {
   };
   return (
     <TouchableOpacity
+      disabled={disabled}
       activeOpacity={activeOpacity}
       onPress={onPress}
       style={[styles ?? localStyles.backButton]}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}>
       <Animated.View style={{transform: [{scale: scaleAnim}]}}>
-      {children}
+        {children}
       </Animated.View>
     </TouchableOpacity>
   );
