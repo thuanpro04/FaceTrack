@@ -18,16 +18,18 @@ const staffSchema = new mongoose.Schema({
   ],
   bio: { type: String, default: null },
   totalWorkplaces: { type: Number, default: 0 },
-  manageBy: {
-    manageId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Manage",
+  manageBy: [
+    {
+      manageId: {
+        type: String,
+        ref: "Manage",
+      },
+      joinedAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
-    joinedAt: {
-      type: Date,
-      default: Date.now,
-    },
-  },
+  ],
   workInfo: {
     position: {
       type: String,

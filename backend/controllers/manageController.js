@@ -21,7 +21,7 @@ exports.getStaffInfo = async (req, res) => {
     // Trả về mảng thông tin cơ bản của user trong staff
 
     const basicStaffs = staffs.map((staff) => ({
-      _id: staff._id,
+      _id: staff.user,
       fullName: staff.user?.fullName,
       email: staff.user?.email,
       phone: staff.user?.phone,
@@ -51,6 +51,15 @@ exports.getStaffInfo = async (req, res) => {
     });
   }
 };
+exports.createNotification = async (senderId, receiverId, content, type) => {
+  await NotificationInvite.create({
+    sender: senderId,
+    receiver: receiverId,
+    content,
+    type,
+  });
+  console.log("Create notifi successfully: ",senderId,receiverId);
+};
 exports.handleInviteToGroup = async (req, res) => {
   const { id, userId } = req.body;
   try {
@@ -74,11 +83,17 @@ exports.handleInviteToGroup = async (req, res) => {
         message: "You have already sent the invitation.",
       });
     }
-    await NotificationInvite.create({
-      sender: id,
-      receiver: userId,
-      content: `Bạn được mời vào nhóm bởi quản lý ${manage.fullName}`,
-    });
+    // await NotificationInvite.create({
+    //   sender: id,
+    //   receiver: userId,
+    //   content: `Bạn được mời vào nhóm bởi quản lý ${manage.fullName}`,
+    // });
+    await this.createNotification(
+      id,
+      userId,
+      `Bạn được mời vào nhóm bởi quản lý ${manage.fullName}`,
+      "invite"
+    );
     console.log("Invite user to group successfully");
 
     res.status(200).json({

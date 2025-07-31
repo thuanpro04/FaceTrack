@@ -283,7 +283,6 @@ exports.upload_Profile = async (req, res) => {
 };
 exports.upload_Code = async (req, res) => {
   const { id, code } = req.body;
-  console.log({ id, code });
 
   if (!id || !code) {
     return res
@@ -300,7 +299,6 @@ exports.upload_Code = async (req, res) => {
 
     // 2. Tìm staff theo userId
     const user = await User.findById({ _id: id });
-    console.log(user, 12);
 
     if (!user) {
       return res.status(404).json({ message: "Staff not found with user id" });
@@ -338,7 +336,7 @@ exports.upload_Code = async (req, res) => {
     });
   } catch (error) {
     console.error("Upload code error:", error);
-    res
+    return res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
   }

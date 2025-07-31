@@ -1,7 +1,9 @@
+const Manage = require("../models/Manage");
 const NotificationInvite = require("../models/NotificationInvite");
 const Staff = require("../models/Staff");
+const User = require("../models/User");
 const { getUserById, getManageInfoReferred } = require("./AuthController");
-
+const { createNotification } = require("./manageController");
 exports.getManageInfo = async (req, res) => {
   const { id } = req.params;
   try {
@@ -33,7 +35,7 @@ exports.getManageInfo = async (req, res) => {
     });
   }
 };
-exports.getNotificationInviteToTeam = async (req, res) => {
+exports.getNotifiForUser = async (req, res) => {
   const { id } = req.params;
   try {
     if (!id) {
@@ -50,20 +52,25 @@ exports.getNotificationInviteToTeam = async (req, res) => {
     }
 
     const manageInfo = notifications.map(async (item) => {
-      const userInfo = await getUserById(item.sender);
+      const userInfo = await Manage.findOne({ user: item.sender }).populate({
+        path: "user",
+        select: "fullName profileImageUrl phone email gender",
+      });
+
       return {
         notifications: item,
         manages: {
-          fullName: userInfo.fullName,
-          profileImageUrl: userInfo.profileImageUrl,
-          phone: userInfo.phone,
-          email: userInfo.email,
-          gender: userInfo.gender,
+          fullName: userInfo.user.fullName,
+          profileImageUrl: userInfo.user.profileImageUrl,
+          phone: userInfo.user.phone,
+          email: userInfo.user.email,
+          gender: userInfo.user.gender,
+          referralCode: userInfo.referralCode,
         },
       };
     });
     const manages = await Promise.all(manageInfo);
-
+    console.log("Get notification invite successfully ");
     res.status(200).json({
       message: "Get notification invite successfully !!",
       result: manages,
@@ -72,5 +79,75 @@ exports.getNotificationInviteToTeam = async (req, res) => {
     return res.status(500).json({
       message: `Server get invite to team error: ${error}`,
     });
+  }
+};
+exports.handleRejectInviteToManage = async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (!id) {
+      return res.status(400).json({ message: "Missing required field: id" });
+    }
+    const noti = await NotificationInvite.findById(id);
+    if (!noti) {
+      return res.status(404).json({
+        message: "Notification invite not found !!!",
+      });
+    }
+    const user = await getUserById(noti.receiver);
+
+    await createNotification(
+      noti.receiver,
+      noti.sender,
+      `${user.fullName} đã từ chối vào nhóm`,
+      "message"
+    );
+    await NotificationInvite.findByIdAndDelete(id);
+    console.log("Reject invite successfully !!");
+
+    res.status(200).json({
+      message: "Reject invite successfully !!",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: `Reject invite to manage server error:${error}`,
+    });
+  }
+};
+
+exports.handleAgreeInviteToManage = async (req, res) => {
+  const { id, code, userId } = req.body;
+  try {
+    // 2. Tìm staff theo userId
+    const user = await getUserById(userId);
+    const noti = await NotificationInvite.findById(id);
+    const staff = await Staff.findOne({ user: userId });
+    if (!noti) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+    if (!staff) {
+      return res.status(404).json({ message: "Staff not found" });
+    }
+    if (!user) {
+      return res.status(404).json({ message: "Staff not found with user id" });
+    }
+
+    // 3. Kiểm tra xem tồn tại mã code đó trong request chưa rồi thì xóa
+    user.requestManages = user.requestManages.filter(
+      (item) => item.referralCode !== code
+    );
+    await user.save();
+
+    // 4. thêm vào manageBy vào collection staff
+    staff.manageBy.push({ manageId: noti.sender });
+    await staff.save();
+    await NotificationInvite.findByIdAndDelete(id);
+    res.status(200).json({
+      message: "Agree to group successfully!!",
+    });
+  } catch (error) {
+    console.error("Upload code error:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };

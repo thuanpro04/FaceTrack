@@ -22,6 +22,9 @@ const NotificationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  isRead: {
+    type: Boolean,
+  },
 });
 NotificationSchema.index({ sender: 1, receiver: 1 }, { unique: true });
 module.exports = mongoose.model("NotificationInvite", NotificationSchema);
