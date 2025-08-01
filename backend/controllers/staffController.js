@@ -113,14 +113,16 @@ exports.handleRejectInviteToManage = async (req, res) => {
     });
   }
 };
-
 exports.handleAgreeInviteToManage = async (req, res) => {
   const { id, code, userId } = req.body;
   try {
     // 2. Tìm staff theo userId
-    const user = await getUserById(userId);
-    const noti = await NotificationInvite.findById(id);
-    const staff = await Staff.findOne({ user: userId });
+    const [noti, user, staff] = await Promise.all([
+      NotificationInvite.findById(id),
+      getUserById(userId),
+      Staff.findOne({ user: userId }),
+    ]);
+
     if (!noti) {
       return res.status(404).json({ message: "Notification not found" });
     }
@@ -130,17 +132,38 @@ exports.handleAgreeInviteToManage = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "Staff not found with user id" });
     }
-
+    const manage = await Manage.findOne({ user: noti.sender });
+    if (!manage) {
+      return res.status(404).json({
+        message: "Manage not found !!!",
+      });
+    }
     // 3. Kiểm tra xem tồn tại mã code đó trong request chưa rồi thì xóa
     user.requestManages = user.requestManages.filter(
       (item) => item.referralCode !== code
     );
-    await user.save();
 
-    // 4. thêm vào manageBy vào collection staff
+    manage.requestStaff = manage.requestStaff.filter(
+      (item) => item.user.toString() !== userId.toString()
+    );
+
+    // Lưu
     staff.manageBy.push({ manageId: noti.sender });
-    await staff.save();
-    await NotificationInvite.findByIdAndDelete(id);
+    manage.staffs.push({ userId });
+    // Lưu thay đổi song song
+    await Promise.all([
+      user.save(),
+      staff.save(),
+      manage.save(),
+      NotificationInvite.findByIdAndDelete(id)
+    ]);
+    
+    await createNotification(
+      noti.receiver,
+      noti.sender,
+      `${user.fullName} đã đồng ý vào team 👏`,
+      "message"
+    );
     res.status(200).json({
       message: "Agree to group successfully!!",
     });

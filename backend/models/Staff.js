@@ -23,6 +23,7 @@ const staffSchema = new mongoose.Schema({
       manageId: {
         type: String,
         ref: "Manage",
+        unique: true,
       },
       joinedAt: {
         type: Date,

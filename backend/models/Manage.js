@@ -9,6 +9,15 @@ const manageSchema = new mongoose.Schema({
     required: true,
     ref: "User",
   },
+  staffs: [
+    {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        unique: true,
+      },
+    },
+  ],
   requestStaff: [
     {
       user: {

@@ -58,7 +58,7 @@ exports.createNotification = async (senderId, receiverId, content, type) => {
     content,
     type,
   });
-  console.log("Create notifi successfully: ",senderId,receiverId);
+  console.log("Create notifi successfully: ", senderId, receiverId);
 };
 exports.handleInviteToGroup = async (req, res) => {
   const { id, userId } = req.body;
@@ -68,10 +68,18 @@ exports.handleInviteToGroup = async (req, res) => {
         message: "Missing required fields: id && userId",
       });
     }
-    const manage = await User.findById(id).select("fullName");
+    const manage = await Manage.findOne({ user: id }).populate({
+      path: "user",
+      select: "fullName",
+    });
     if (!manage) {
       return res.status(404).json({
         message: "Manage not found !!!",
+      });
+    }
+    if (manage.staffs.some((item) => item.userId.equals(userId))) {
+      return res.status(200).json({
+        message: "UserId already existing !!!",
       });
     }
     const existingNoti = await NotificationInvite.findOne({
